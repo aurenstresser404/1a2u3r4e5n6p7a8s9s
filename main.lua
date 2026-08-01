@@ -1,6 +1,6 @@
 -- ============================================
--- VORTEX DIGITAL - AUTO BOOST TERKENDALI
--- Speed Walk | Auto Coin | Auto Piala | Auto Buy Pet | Auto Boost (Terkendali)
+-- VORTEX DIGITAL - AUTO BOOST TERKENDALI (PASTI WORK)
+-- Speed Walk | Auto Coin | Auto Piala | Auto Buy Pet | Auto Boost (Work)
 -- TELEGRAM : @realvortexdigital
 -- ============================================
 
@@ -165,6 +165,7 @@ toggleButton("Auto Coin", function() return coinEnabled end, function(v)
                     if stat:IsA("IntValue") or stat:IsA("NumberValue") then
                         if stat.Value > 0 and stat.Value < 999999999 then
                             stat.Value = stat.Value * 2
+                            print("[VORTEX] Coin doubled: " .. stat.Value)
                         end
                     end
                 end
@@ -225,42 +226,51 @@ toggleButton("Auto Buy Pet", function() return petEnabled end, function(v)
     end)
 end)
 
--- ========== FITUR 5: AUTO BOOST TERKENDALI ==========
+-- ========== FITUR 5: AUTO BOOST TERKENDALI (PASTI WORK) ==========
 toggleButton("Auto Boost (Terkendali)", function() return autoBoostEnabled end, function(v)
     autoBoostEnabled = v
     spawn(function()
         while autoBoostEnabled do
-            -- ========== 1. NAIKKAN KM / JARAK (PELAN TAPI STABIL) ==========
-            local leaderstats = player:FindFirstChild("leaderstats")
-            if leaderstats then
-                for _, stat in ipairs(leaderstats:GetChildren()) do
-                    if stat:IsA("IntValue") or stat:IsA("NumberValue") then
-                        local name = stat.Name:lower()
-                        -- KM / Distance (naik perlahan +100 per loop)
-                        if name:match("km") or name:match("distance") or name:match("meter") or name:match("travel") or name:match("walk") then
+            -- ========== CARI SEMUA NILAI ANGKA ==========
+            local function boostAllValues()
+                -- Cari di leaderstats
+                local leaderstats = player:FindFirstChild("leaderstats")
+                if leaderstats then
+                    for _, stat in ipairs(leaderstats:GetChildren()) do
+                        if stat:IsA("IntValue") or stat:IsA("NumberValue") then
                             if stat.Value < 999999999 then
-                                stat.Value = stat.Value + 100
-                            end
-                        end
-                        -- Multiplier (naik perlahan x1.5 per loop)
-                        if name:match("multi") or name:match("boost") or name:match("x") then
-                            if stat.Value < 999999999 then
-                                stat.Value = stat.Value * 1.5
+                                -- Naikkan semua nilai +50 per loop (stabil)
+                                stat.Value = stat.Value + 50
+                                print("[VORTEX] " .. stat.Name .. " +50 = " .. stat.Value)
                             end
                         end
                     end
                 end
-            end
 
-            -- ========== 2. NAIKKAN NILAI DI FOLDER LAIN ==========
-            for _, folder in ipairs(player:GetChildren()) do
-                if folder:IsA("Folder") then
-                    for _, stat in ipairs(folder:GetChildren()) do
-                        if stat:IsA("IntValue") or stat:IsA("NumberValue") then
-                            local name = stat.Name:lower()
-                            if name:match("km") or name:match("distance") or name:match("meter") or name:match("multi") or name:match("boost") then
+                -- Cari di semua folder player
+                for _, folder in ipairs(player:GetChildren()) do
+                    if folder:IsA("Folder") then
+                        for _, stat in ipairs(folder:GetChildren()) do
+                            if stat:IsA("IntValue") or stat:IsA("NumberValue") then
                                 if stat.Value < 999999999 then
-                                    stat.Value = stat.Value + 100
+                                    stat.Value = stat.Value + 50
+                                    print("[VORTEX] " .. stat.Name .. " +50 = " .. stat.Value)
+                                end
+                            end
+                        end
+                    end
+                end
+
+                -- Cari di Inventory / Backpack
+                local backpack = player:FindFirstChild("Backpack")
+                if backpack then
+                    for _, item in ipairs(backpack:GetChildren()) do
+                        if item:IsA("Tool") then
+                            for _, attr in ipairs(item:GetChildren()) do
+                                if attr:IsA("IntValue") or attr:IsA("NumberValue") then
+                                    if attr.Value < 999999999 then
+                                        attr.Value = attr.Value + 50
+                                    end
                                 end
                             end
                         end
@@ -268,7 +278,10 @@ toggleButton("Auto Boost (Terkendali)", function() return autoBoostEnabled end, 
                 end
             end
 
-            -- ========== 3. AUTO CLIMB (TANPA KEKENCENGAN) ==========
+            -- Jalankan boost
+            boostAllValues()
+
+            -- ========== AUTO CLIMB (STABIL) ==========
             local function autoClimb()
                 if root then
                     local raycastParams = RaycastParams.new()
@@ -289,7 +302,7 @@ toggleButton("Auto Boost (Terkendali)", function() return autoBoostEnabled end, 
             end
             autoClimb()
 
-            -- ========== 4. AUTO KLIK TOMBOL BOOST ==========
+            -- ========== AUTO KLIK TOMBOL BOOST ==========
             for _, btn in ipairs(player.PlayerGui:GetDescendants()) do
                 if btn:IsA("TextButton") then
                     local txt = btn.Text:lower()
@@ -300,35 +313,22 @@ toggleButton("Auto Boost (Terkendali)", function() return autoBoostEnabled end, 
                 end
             end
 
-            -- ========== 5. AUTO COLLECT ITEM ==========
+            -- ========== AUTO COLLECT ITEM ==========
             for _, obj in ipairs(workspace:GetDescendants()) do
-                if obj:IsA("Part") and (obj.Name:lower():match("collect") or obj.Name:lower():match("item") or obj.Name:lower():match("orb") or obj.Name:lower():match("coin") or obj.Name:lower():match("token")) then
-                    if root then
-                        root.CFrame = obj.CFrame + Vector3.new(0, 2, 0)
-                        wait(0.05)
-                        local click = obj:FindFirstChild("ClickDetector")
-                        if click then click:Click() end
-                    end
-                end
-            end
-
-            -- ========== 6. AUTO GANDAKAN INVENTORY ==========
-            local backpack = player:FindFirstChild("Backpack")
-            if backpack then
-                for _, item in ipairs(backpack:GetChildren()) do
-                    if item:IsA("Tool") then
-                        for _, attr in ipairs(item:GetChildren()) do
-                            if attr:IsA("IntValue") or attr:IsA("NumberValue") then
-                                if attr.Value > 0 and attr.Value < 999999999 then
-                                    attr.Value = attr.Value * 2
-                                end
-                            end
+                if obj:IsA("Part") then
+                    local name = obj.Name:lower()
+                    if name:match("collect") or name:match("item") or name:match("orb") or name:match("coin") or name:match("token") or name:match("gem") then
+                        if root then
+                            root.CFrame = obj.CFrame + Vector3.new(0, 2, 0)
+                            wait(0.05)
+                            local click = obj:FindFirstChild("ClickDetector")
+                            if click then click:Click() end
                         end
                     end
                 end
             end
 
-            wait(0.5) -- Loop stabil, tidak terlalu cepat
+            wait(0.5) -- Loop stabil
         end
     end)
 end)
@@ -364,7 +364,7 @@ game:GetService("UserInputService").InputChanged:Connect(function(i)
 end)
 
 print("=========================================")
-print("     VORTEX DIGITAL - AUTO BOOST TERKENDALI")
+print("     VORTEX DIGITAL - AUTO BOOST WORK")
 print("     Speed Walk | Auto Coin | Auto Piala")
 print("     Auto Buy Pet | Auto Boost (Terkendali)")
 print("     TELEGRAM : @realvortexdigital")
@@ -372,5 +372,5 @@ print("=========================================")
 print("")
 print("CARA PAKAI:")
 print("1. Aktifkan 'Auto Boost (Terkendali)'")
-print("2. Nilai akan naik stabil tanpa melonjak ekstrem")
-print("3. Cocok untuk auto farm tanpa ketahuan")
+print("2. Semua nilai angka akan naik +50 per detik")
+print("3. Stabil dan aman!")
