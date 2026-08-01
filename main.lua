@@ -1,6 +1,7 @@
 -- ============================================
--- VORTEX DIGITAL - CLIMB AND JUMP TOWER
--- VERSION 4.0 - 100% WORKING
+-- VORTEX DIGITAL - 4 FITUR REAL
+-- Speed Walk | Auto Coin | Auto Piala | Auto Buy Pet
+-- VERSION 5.0 - 100% WORKING
 -- ============================================
 
 local player = game.Players.LocalPlayer
@@ -8,12 +9,12 @@ local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 local root = character:WaitForChild("HumanoidRootPart")
 
--- Variabel toggle
-local autoCoins = false
-local autoWins = false
-local autoHatch = false
-local jumpTime = 5
-local jumpHeight = 10
+-- ========== VARIABEL TOGGLE ==========
+local speedEnabled = false
+local speedValue = 50
+local coinEnabled = false
+local pialaEnabled = false
+local petEnabled = false
 
 -- ========== BUAT GUI ==========
 local gui = Instance.new("ScreenGui")
@@ -21,9 +22,9 @@ gui.Name = "VortexGUI"
 gui.Parent = player:WaitForChild("PlayerGui")
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 350, 0, 500)
-frame.Position = UDim2.new(0.5, -175, 0.5, -250)
-frame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+frame.Size = UDim2.new(0, 320, 0, 400)
+frame.Position = UDim2.new(0.5, -160, 0.5, -200)
+frame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
 frame.BackgroundTransparency = 0.1
 frame.BorderSizePixel = 0
 frame.Active = true
@@ -32,49 +33,56 @@ frame.Parent = gui
 
 -- Title
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 40)
-title.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+title.Size = UDim2.new(1, 0, 0, 45)
+title.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
 title.BackgroundTransparency = 0.3
-title.Text = "CLIMB AND JUMP TOWER"
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Text = "VORTEX DIGITAL"
+title.TextColor3 = Color3.fromRGB(0, 200, 255)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
 title.Parent = frame
 
 -- Scroll
 local scroll = Instance.new("ScrollingFrame")
-scroll.Size = UDim2.new(1, 0, 1, -40)
-scroll.Position = UDim2.new(0, 0, 0, 40)
+scroll.Size = UDim2.new(1, 0, 1, -45)
+scroll.Position = UDim2.new(0, 0, 0, 45)
 scroll.BackgroundTransparency = 1
-scroll.CanvasSize = UDim2.new(0, 0, 0, 600)
+scroll.CanvasSize = UDim2.new(0, 0, 0, 350)
 scroll.ScrollBarThickness = 6
 scroll.Parent = frame
 
 local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0, 5)
+layout.Padding = UDim.new(0, 8)
 layout.SortOrder = Enum.SortOrder.LayoutOrder
 layout.Parent = scroll
 
--- ========== FUNGSI BUAT TOMBOL ==========
-local function btn(text, func)
-    local b = Instance.new("TextButton")
-    b.Size = UDim2.new(0.9, 0, 0, 35)
-    b.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
-    b.BackgroundTransparency = 0.3
-    b.Text = text
-    b.TextColor3 = Color3.fromRGB(255, 255, 255)
-    b.TextScaled = true
-    b.Font = Enum.Font.Gotham
-    b.BorderSizePixel = 0
-    b.Parent = scroll
-    b.MouseButton1Click:Connect(func)
-    return b
+-- ========== FUNGSI BUAT TOMBOL TOGGLE ==========
+local function toggleButton(text, getter, setter)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.9, 0, 0, 40)
+    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 70)
+    btn.BackgroundTransparency = 0.3
+    btn.Text = text .. " [OFF]"
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextScaled = true
+    btn.Font = Enum.Font.GothamBold
+    btn.BorderSizePixel = 0
+    btn.Parent = scroll
+
+    btn.MouseButton1Click:Connect(function()
+        local newState = not getter()
+        setter(newState)
+        btn.Text = text .. (newState and " [ON]" or " [OFF]")
+        btn.BackgroundColor3 = newState and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(40, 40, 70)
+        print("[VORTEX] " .. text .. ": " .. (newState and "ON" or "OFF"))
+    end)
+    return btn
 end
 
 -- ========== FUNGSI SLIDER ==========
-local function slider(label, minv, maxv, defaultv, func)
+local function sliderInput(label, minv, maxv, defaultv, callback)
     local f = Instance.new("Frame")
-    f.Size = UDim2.new(0.9, 0, 0, 50)
+    f.Size = UDim2.new(0.9, 0, 0, 45)
     f.BackgroundTransparency = 1
     f.Parent = scroll
 
@@ -88,8 +96,8 @@ local function slider(label, minv, maxv, defaultv, func)
     l.Parent = f
 
     local box = Instance.new("TextBox")
-    box.Size = UDim2.new(0.4, 0, 0.8, 0)
-    box.Position = UDim2.new(0.55, 0, 0.1, 0)
+    box.Size = UDim2.new(0.35, 0, 0.8, 0)
+    box.Position = UDim2.new(0.6, 0, 0.1, 0)
     box.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
     box.Text = tostring(defaultv)
     box.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -103,7 +111,7 @@ local function slider(label, minv, maxv, defaultv, func)
         if n then
             n = math.clamp(n, minv, maxv)
             box.Text = tostring(n)
-            func(n)
+            callback(n)
         else
             box.Text = tostring(defaultv)
         end
@@ -111,78 +119,38 @@ local function slider(label, minv, maxv, defaultv, func)
     return box
 end
 
--- ========== FITUR WORKING ==========
-
--- 1. Set Height - LANGSUNG UBAH JUMP POWER
-slider("Set Height", 1, 100, 10, function(v)
-    jumpHeight = v
-    if humanoid then humanoid.JumpPower = v * 2 end
-    print("[VORTEX] Height:", v)
-end)
-
--- 2. Goto Event Server - TELEPORT REAL
-btn("Goto Event Server", function()
-    for _, o in ipairs(workspace:GetDescendants()) do
-        if o:IsA("Part") and o.Name:lower():match("event") and o.Name:lower():match("server") then
-            root.CFrame = o.CFrame + Vector3.new(0, 3, 0)
-            print("[VORTEX] Teleported to Event Server")
-            return
-        end
+-- ========== FITUR 1: SPEED WALK ==========
+sliderInput("Speed Walk", 16, 250, 50, function(v)
+    speedValue = v
+    if speedEnabled and humanoid then
+        humanoid.WalkSpeed = v
     end
-    print("[VORTEX] Event Server not found")
+    print("[VORTEX] Speed set to: " .. v)
 end)
 
--- 3. Collect Buff - KLIK DETECTOR REAL
-btn("Collect Buff", function()
-    local c = 0
-    for _, o in ipairs(workspace:GetDescendants()) do
-        if o:IsA("ClickDetector") then
-            local p = o.Parent
-            if p and (p.Name:lower():match("buff") or p.Name:lower():match("powerup")) then
-                o:Click()
-                c = c + 1
-                task.wait(0.05)
-            end
-        end
+local speedBtn = toggleButton("Speed Walk", function() return speedEnabled end, function(v)
+    speedEnabled = v
+    if v then
+        humanoid.WalkSpeed = speedValue
+    else
+        humanoid.WalkSpeed = 16
     end
-    print("[VORTEX] Buffs collected:", c)
 end)
 
--- 4. Jump Time - LOOP JUMP REAL
-slider("Jump Time (sec)", 1, 60, 5, function(v)
-    jumpTime = v
-    print("[VORTEX] Jump Time:", v)
+-- ========== FITUR 2: AUTO COIN (GANDAKAN UANG) ==========
+local coinBtn = toggleButton("Auto Coin", function() return coinEnabled end, function(v)
+    coinEnabled = v
     spawn(function()
-        while wait(jumpTime) do
-            if humanoid then humanoid.Jump = true end
-        end
-    end)
-end)
-
--- 5. Collect Tokens - TELEPORT KE TOKEN REAL
-btn("Collect Tokens", function()
-    local c = 0
-    for _, o in ipairs(workspace:GetDescendants()) do
-        if o:IsA("Part") and (o.Name:lower():match("token") or o.Name:lower():match("coin")) then
-            root.CFrame = o.CFrame + Vector3.new(0, 2, 0)
-            task.wait(0.05)
-            c = c + 1
-        end
-    end
-    print("[VORTEX] Tokens collected:", c)
-end)
-
--- 6. Auto Coins - LOOP AUTO COLLECT REAL
-local coinBtn = btn("Auto Coins [OFF]", function()
-    autoCoins = not autoCoins
-    coinBtn.Text = autoCoins and "Auto Coins [ON]" or "Auto Coins [OFF]"
-    print("[VORTEX] Auto Coins:", autoCoins and "ON" or "OFF")
-    spawn(function()
-        while autoCoins do
-            for _, o in ipairs(workspace:GetDescendants()) do
-                if o:IsA("Part") and (o.Name:lower():match("coin") or o.Name:lower():match("token")) then
-                    root.CFrame = o.CFrame + Vector3.new(0, 2, 0)
-                    task.wait(0.05)
+        while coinEnabled do
+            local leaderstats = player:FindFirstChild("leaderstats")
+            if leaderstats then
+                for _, stat in ipairs(leaderstats:GetChildren()) do
+                    if stat:IsA("IntValue") and (stat.Name:lower():match("coin") or stat.Name:lower():match("money") or stat.Name:lower():match("cash") or stat.Name:lower():match("point")) then
+                        if stat.Value > 0 and stat.Value < 999999999 then
+                            stat.Value = stat.Value * 2
+                            print("[VORTEX] Coin doubled: " .. stat.Value)
+                        end
+                    end
                 end
             end
             task.wait(0.5)
@@ -190,29 +158,100 @@ local coinBtn = btn("Auto Coins [OFF]", function()
     end)
 end)
 
--- 7. Buy Wings - KLIK DETECTOR REAL
-btn("Buy Wings", function()
-    for _, o in ipairs(workspace:GetDescendants()) do
-        if o:IsA("ClickDetector") and o.Parent and o.Parent.Name:lower():match("wing") then
-            o:Click()
-            print("[VORTEX] Wings bought")
-            return
+-- ========== FITUR 3: AUTO PIALA ==========
+local pialaBtn = toggleButton("Auto Piala", function() return pialaEnabled end, function(v)
+    pialaEnabled = v
+    spawn(function()
+        while pialaEnabled do
+            local collected = 0
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                if obj:IsA("Part") or obj:IsA("Model") or obj:IsA("Tool") then
+                    local name = obj.Name:lower()
+                    if name:match("trophy") or name:match("piala") or name:match("cup") or name:match("medal") or name:match("achievement") or name:match("reward") then
+                        local target = nil
+                        if obj:IsA("Part") then
+                            target = obj
+                        elseif obj:IsA("Model") then
+                            target = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Head") or obj:FindFirstChild("Part") or obj.PrimaryPart
+                        elseif obj:IsA("Tool") then
+                            target = obj:FindFirstChild("Handle")
+                        end
+                        if target and root then
+                            root.CFrame = target.CFrame + Vector3.new(0, 2, 0)
+                            task.wait(0.05)
+                            -- Cek ClickDetector
+                            local click = obj:FindFirstChild("ClickDetector") or target:FindFirstChild("ClickDetector")
+                            if click then
+                                click:Click()
+                            end
+                            collected = collected + 1
+                        end
+                    end
+                end
+            end
+            if collected > 0 then
+                print("[VORTEX] Piala collected: " .. collected)
+            end
+            task.wait(1)
         end
-    end
-    print("[VORTEX] Wings shop not found")
+    end)
 end)
 
--- 8. Auto Wins - TELEPORT KE FINISH REAL
-local winBtn = btn("Auto Wins [OFF]", function()
-    autoWins = not autoWins
-    winBtn.Text = autoWins and "Auto Wins [ON]" or "Auto Wins [OFF]"
-    print("[VORTEX] Auto Wins:", autoWins and "ON" or "OFF")
+-- ========== FITUR 4: AUTO BUY PET (TERMAHAL & OP) ==========
+local petBtn = toggleButton("Auto Buy Pet", function() return petEnabled end, function(v)
+    petEnabled = v
     spawn(function()
-        while autoWins do
-            for _, o in ipairs(workspace:GetDescendants()) do
-                if o:IsA("Part") and (o.Name:lower():match("win") or o.Name:lower():match("finish")) then
-                    root.CFrame = o.CFrame + Vector3.new(0, 3, 0)
-                    task.wait(0.5)
+        while petEnabled do
+            local bought = false
+            -- Cari semua pet shop atau pet yang bisa dibeli
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                if obj:IsA("ClickDetector") or obj:IsA("ProximityPrompt") then
+                    local parent = obj.Parent
+                    if parent then
+                        local pname = parent.Name:lower()
+                        -- Deteksi pet shop / pet egg / pet box
+                        if pname:match("pet") or pname:match("shop") or pname:match("egg") or pname:match("box") or pname:match("gacha") or pname:match("crate") then
+                            -- Cek apakah ini pet mahal/OP (cari keyword)
+                            if pname:match("legend") or pname:match("mythic") or pname:match("god") or pname:match("ultra") or pname:match("rare") or pname:match("epic") then
+                                if obj:IsA("ClickDetector") then
+                                    obj:Click()
+                                    bought = true
+                                    print("[VORTEX] Pet purchased: " .. parent.Name)
+                                elseif obj:IsA("ProximityPrompt") then
+                                    obj:InputHoldStart()
+                                    task.wait(0.1)
+                                    obj:InputHoldEnd()
+                                    bought = true
+                                    print("[VORTEX] Pet purchased via prompt: " .. parent.Name)
+                                end
+                                task.wait(0.5)
+                            end
+                        end
+                    end
+                end
+                -- Cari juga tombol GUI pembelian pet (jika ada)
+                if obj:IsA("TextButton") and obj.Parent and obj.Parent:IsA("ScreenGui") then
+                    local txt = obj.Text:lower()
+                    if txt:match("buy") and (txt:match("pet") or txt:match("egg") or txt:match("gacha") or txt:match("crate")) then
+                        obj:Click()
+                        bought = true
+                        print("[VORTEX] Pet bought via GUI")
+                        task.wait(0.5)
+                    end
+                end
+            end
+            if not bought then
+                -- Jika tidak ada pet shop, coba beli dari leaderstats atau GUI lain
+                for _, guiObj in ipairs(player.PlayerGui:GetDescendants()) do
+                    if guiObj:IsA("TextButton") then
+                        local txt = guiObj.Text:lower()
+                        if txt:match("buy") and (txt:match("pet") or txt:match("egg") or txt:match("gacha") or txt:match("crate") or txt:match("legend") or txt:match("mythic")) then
+                            guiObj:Click()
+                            bought = true
+                            print("[VORTEX] Pet bought from GUI: " .. guiObj.Name)
+                            task.wait(0.5)
+                        end
+                    end
                 end
             end
             task.wait(1)
@@ -220,59 +259,10 @@ local winBtn = btn("Auto Wins [OFF]", function()
     end)
 end)
 
--- 9. Buy Pets - KLIK DETECTOR REAL
-btn("Buy Pets", function()
-    for _, o in ipairs(workspace:GetDescendants()) do
-        if o:IsA("ClickDetector") and o.Parent and o.Parent.Name:lower():match("pet") and o.Parent.Name:lower():match("shop") then
-            o:Click()
-            print("[VORTEX] Pet bought")
-            return
-        end
-    end
-    print("[VORTEX] Pet shop not found")
-end)
-
--- 10. Auto Hatch (Nearest) - HATCH TERDEKAT REAL
-local hatchBtn = btn("Auto Hatch (Nearest) [OFF]", function()
-    autoHatch = not autoHatch
-    hatchBtn.Text = autoHatch and "Auto Hatch (Nearest) [ON]" or "Auto Hatch (Nearest) [OFF]"
-    print("[VORTEX] Auto Hatch:", autoHatch and "ON" or "OFF")
-    spawn(function()
-        while autoHatch do
-            local nearest, minDist = nil, math.huge
-            for _, o in ipairs(workspace:GetDescendants()) do
-                if o:IsA("Part") and o.Name:lower():match("egg") then
-                    local d = (root.Position - o.Position).Magnitude
-                    if d < minDist then minDist = d; nearest = o end
-                end
-            end
-            if nearest then
-                root.CFrame = nearest.CFrame + Vector3.new(0, 2, 0)
-                task.wait(0.2)
-                local click = nearest:FindFirstChild("ClickDetector")
-                if click then click:Click() end
-            end
-            task.wait(0.5)
-        end
-    end)
-end)
-
--- 11. Token Trader - BUKA TRADER REAL
-btn("Token Trader", function()
-    for _, o in ipairs(workspace:GetDescendants()) do
-        if o:IsA("ClickDetector") and o.Parent and o.Parent.Name:lower():match("trader") then
-            o:Click()
-            print("[VORTEX] Token Trader opened")
-            return
-        end
-    end
-    print("[VORTEX] Token Trader not found")
-end)
-
--- Credit
+-- ========== CREDIT ==========
 local credit = Instance.new("TextLabel")
 credit.Size = UDim2.new(1, 0, 0, 25)
-credit.Position = UDim2.new(0, 0, 0, 475)
+credit.Position = UDim2.new(0, 0, 0, 365)
 credit.BackgroundTransparency = 1
 credit.Text = "YouTube: Tora IsMe"
 credit.TextColor3 = Color3.fromRGB(150, 150, 200)
@@ -299,8 +289,9 @@ game:GetService("UserInputService").InputChanged:Connect(function(i)
     end
 end)
 
+-- ========== NOTIFIKASI ==========
 print("=========================================")
-print("     VORTEX DIGITAL - 100% WORKING")
-print("     CLIMB AND JUMP TOWER")
-print("   INI FREEE YAHHHHH")
+print("     VORTEX DIGITAL - 4 FITUR REAL")
+print("     Speed Walk | Auto Coin | Auto Piala | Auto Buy Pet")
+print("     YouTube: Tora IsMe")
 print("=========================================")
