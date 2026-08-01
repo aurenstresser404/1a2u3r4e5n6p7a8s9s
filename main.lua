@@ -1,11 +1,17 @@
 -- ============================================
--- VORTEX DIGITAL - ULTRA WORK VERSION
+-- VORTEX DIGITAL - GUI PASTI MUNCUL
 -- Speed Walk | Auto Coin | Auto Piala | Auto Buy Pet | Auto Unlock Worlds
 -- SEMUA FITUR BISA ON/OFF
 -- TELEGRAM : @realvortexdigital
 -- ============================================
 
+-- Tunggu player dan karakter benar-benar siap
 local player = game.Players.LocalPlayer
+if not player then
+    game.Players:WaitForChild("LocalPlayer")
+    player = game.Players.LocalPlayer
+end
+
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 local root = character:WaitForChild("HumanoidRootPart")
@@ -18,25 +24,43 @@ local pialaOn = false
 local petOn = false
 local unlockOn = false
 
--- Buat GUI
+-- ========== BUAT GUI DENGAN METODE PALING AMAN ==========
 local gui = Instance.new("ScreenGui")
 gui.Name = "VortexGUI"
+gui.ResetOnSpawn = false -- Biar ga ilang saat respawn
 gui.Parent = player:WaitForChild("PlayerGui")
 
+-- Jika gagal, coba parent ke CoreGui
+if not gui.Parent then
+    gui.Parent = game:GetService("CoreGui")
+end
+
+-- Frame utama
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 300, 0, 420)
 frame.Position = UDim2.new(0.5, -150, 0.5, -210)
-frame.BackgroundColor3 = Color3.fromRGB(10, 10, 20)
-frame.BackgroundTransparency = 0.1
+frame.BackgroundColor3 = Color3.fromRGB(10, 10, 25)
+frame.BackgroundTransparency = 0.05
 frame.BorderSizePixel = 0
+frame.BorderColor3 = Color3.fromRGB(0, 150, 255)
 frame.Active = true
 frame.Draggable = true
 frame.Parent = gui
 
+-- Shadow / efek pinggiran
+local border = Instance.new("Frame")
+border.Size = UDim2.new(1, 4, 1, 4)
+border.Position = UDim2.new(-0.01, 0, -0.01, 0)
+border.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+border.BackgroundTransparency = 0.3
+border.BorderSizePixel = 0
+border.Parent = frame
+
 -- Title
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 40)
-title.BackgroundColor3 = Color3.fromRGB(25, 25, 45)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundColor3 = Color3.fromRGB(20, 20, 50)
 title.BackgroundTransparency = 0.3
 title.Text = "VORTEX DIGITAL"
 title.TextColor3 = Color3.fromRGB(0, 200, 255)
@@ -46,11 +70,12 @@ title.Parent = frame
 
 -- Scroll
 local scroll = Instance.new("ScrollingFrame")
-scroll.Size = UDim2.new(1, 0, 1, -40)
-scroll.Position = UDim2.new(0, 0, 0, 40)
+scroll.Size = UDim2.new(1, -10, 1, -50)
+scroll.Position = UDim2.new(0, 5, 0, 42)
 scroll.BackgroundTransparency = 1
 scroll.CanvasSize = UDim2.new(0, 0, 0, 400)
-scroll.ScrollBarThickness = 6
+scroll.ScrollBarThickness = 4
+scroll.ScrollBarImageColor3 = Color3.fromRGB(0, 150, 255)
 scroll.Parent = frame
 
 local layout = Instance.new("UIListLayout")
@@ -58,32 +83,34 @@ layout.Padding = UDim.new(0, 6)
 layout.SortOrder = Enum.SortOrder.LayoutOrder
 layout.Parent = scroll
 
--- Fungsi buat tombol toggle
+-- ========== FUNGSI BUAT TOMBOL ==========
 local function makeToggle(text, getter, setter)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.9, 0, 0, 38)
-    btn.BackgroundColor3 = Color3.fromRGB(35, 35, 60)
+    btn.Size = UDim2.new(1, -10, 0, 38)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 60)
     btn.BackgroundTransparency = 0.2
     btn.Text = text .. " [OFF]"
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.TextScaled = true
     btn.Font = Enum.Font.GothamBold
-    btn.BorderSizePixel = 0
+    btn.BorderSizePixel = 1
+    btn.BorderColor3 = Color3.fromRGB(0, 100, 200)
     btn.Parent = scroll
+    
     btn.MouseButton1Click:Connect(function()
         local new = not getter()
         setter(new)
         btn.Text = text .. (new and " [ON]" or " [OFF]")
-        btn.BackgroundColor3 = new and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(35, 35, 60)
+        btn.BackgroundColor3 = new and Color3.fromRGB(0, 120, 0) or Color3.fromRGB(30, 30, 60)
         print("[VORTEX] " .. text .. ": " .. (new and "ON" or "OFF"))
     end)
     return btn
 end
 
--- Fungsi slider
+-- ========== FUNGSI SLIDER ==========
 local function makeSlider(label, minv, maxv, defaultv, callback)
     local f = Instance.new("Frame")
-    f.Size = UDim2.new(0.9, 0, 0, 40)
+    f.Size = UDim2.new(1, -10, 0, 38)
     f.BackgroundTransparency = 1
     f.Parent = scroll
 
@@ -99,13 +126,15 @@ local function makeSlider(label, minv, maxv, defaultv, callback)
     local box = Instance.new("TextBox")
     box.Size = UDim2.new(0.35, 0, 0.8, 0)
     box.Position = UDim2.new(0.6, 0, 0.1, 0)
-    box.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+    box.BackgroundColor3 = Color3.fromRGB(40, 40, 70)
     box.Text = tostring(defaultv)
     box.TextColor3 = Color3.fromRGB(255, 255, 255)
     box.TextScaled = true
     box.Font = Enum.Font.Gotham
-    box.BorderSizePixel = 0
+    box.BorderSizePixel = 1
+    box.BorderColor3 = Color3.fromRGB(0, 100, 200)
     box.Parent = f
+    
     box.FocusLost:Connect(function()
         local n = tonumber(box.Text)
         if n then
@@ -119,22 +148,25 @@ local function makeSlider(label, minv, maxv, defaultv, callback)
     return box
 end
 
--- ========== FITUR 1: SPEED WALK ==========
+-- ========== BUAT FITUR ==========
+
+-- 1. Speed Walk
 makeSlider("Speed Walk", 16, 250, 50, function(v)
     speedVal = v
     if speedOn and humanoid then humanoid.WalkSpeed = v end
 end)
-
 makeToggle("Speed Walk", function() return speedOn end, function(v)
     speedOn = v
     if v then
         humanoid.WalkSpeed = speedVal
+        humanoid.JumpPower = speedVal * 1.2
     else
         humanoid.WalkSpeed = 16
+        humanoid.JumpPower = 50
     end
 end)
 
--- ========== FITUR 2: AUTO COIN ==========
+-- 2. Auto Coin
 makeToggle("Auto Coin", function() return coinOn end, function(v)
     coinOn = v
     spawn(function()
@@ -154,7 +186,7 @@ makeToggle("Auto Coin", function() return coinOn end, function(v)
     end)
 end)
 
--- ========== FITUR 3: AUTO PIALA ==========
+-- 3. Auto Piala
 makeToggle("Auto Piala", function() return pialaOn end, function(v)
     pialaOn = v
     spawn(function()
@@ -162,7 +194,7 @@ makeToggle("Auto Piala", function() return pialaOn end, function(v)
             for _, obj in ipairs(workspace:GetDescendants()) do
                 if obj:IsA("Part") or obj:IsA("Model") then
                     local n = obj.Name:lower()
-                    if n:match("trophy") or n:match("piala") or n:match("cup") or n:match("medal") then
+                    if n:match("trophy") or n:match("piala") or n:match("cup") or n:match("medal") or n:match("chest") then
                         local target = obj:IsA("Part") and obj or obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Part")
                         if target and root then
                             root.CFrame = target.CFrame + Vector3.new(0, 2, 0)
@@ -178,7 +210,7 @@ makeToggle("Auto Piala", function() return pialaOn end, function(v)
     end)
 end)
 
--- ========== FITUR 4: AUTO BUY PET ==========
+-- 4. Auto Buy Pet
 makeToggle("Auto Buy Pet", function() return petOn end, function(v)
     petOn = v
     spawn(function()
@@ -205,12 +237,12 @@ makeToggle("Auto Buy Pet", function() return petOn end, function(v)
     end)
 end)
 
--- ========== FITUR 5: AUTO UNLOCK WORLDS ==========
+-- 5. Auto Unlock Worlds
 makeToggle("Auto Unlock Worlds", function() return unlockOn end, function(v)
     unlockOn = v
     spawn(function()
         while unlockOn do
-            -- Cari tombol di GUI
+            -- Cari tombol GUI
             for _, g in ipairs(player.PlayerGui:GetDescendants()) do
                 if g:IsA("TextButton") then
                     local txt = g.Text:lower()
@@ -235,7 +267,7 @@ makeToggle("Auto Unlock Worlds", function() return unlockOn end, function(v)
                     end
                 end
             end
-            -- Naikkan level di leaderstats
+            -- Naikkan leaderstats
             local ls = player:FindFirstChild("leaderstats")
             if ls then
                 for _, s in ipairs(ls:GetChildren()) do
@@ -251,8 +283,8 @@ end)
 
 -- ========== CREDIT ==========
 local credit = Instance.new("TextLabel")
-credit.Size = UDim2.new(1, 0, 0, 25)
-credit.Position = UDim2.new(0, 0, 0, 385)
+credit.Size = UDim2.new(1, -10, 0, 25)
+credit.Position = UDim2.new(0, 5, 0, 380)
 credit.BackgroundTransparency = 1
 credit.Text = "TELEGRAM : @realvortexdigital"
 credit.TextColor3 = Color3.fromRGB(0, 200, 255)
@@ -279,7 +311,19 @@ game:GetService("UserInputService").InputChanged:Connect(function(i)
     end
 end)
 
+-- ========== NOTIFIKASI ==========
 print("=========================================")
-print("     VORTEX DIGITAL - ULTRA WORK")
+print("     VORTEX DIGITAL - GUI PASTI MUNCUL")
+print("     Speed Walk | Auto Coin | Auto Piala")
+print("     Auto Buy Pet | Auto Unlock Worlds")
 print("     TELEGRAM : @realvortexdigital")
 print("=========================================")
+
+-- Notifikasi di layar
+pcall(function()
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "VORTEX DIGITAL",
+        Text = "GUI Loaded! TELEGRAM : @realvortexdigital",
+        Duration = 3
+    })
+end)
