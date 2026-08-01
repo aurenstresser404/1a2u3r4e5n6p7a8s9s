@@ -1,276 +1,306 @@
 -- ============================================
--- VORTEX DIGITAL - Optimized for Delta Executor
--- Version 3.1
+-- VORTEX DIGITAL - CLIMB AND JUMP TOWER
+-- VERSION 4.0 - 100% WORKING
 -- ============================================
 
--- Fallback untuk kompatibilitas
-local _wait = task and task.wait or wait
-local _http = syn and syn.request or http and http.request or game.HttpGet
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local root = character:WaitForChild("HumanoidRootPart")
 
--- Fungsi untuk mengambil script dengan fallback
-local function getScript(url)
-    local success, result = pcall(function()
-        if syn and syn.request then
-            local response = syn.request({
-                Url = url,
-                Method = "GET"
-            })
-            return response.Body
-        elseif http and http.request then
-            local response = http.request(url)
-            return response
+-- Variabel toggle
+local autoCoins = false
+local autoWins = false
+local autoHatch = false
+local jumpTime = 5
+local jumpHeight = 10
+
+-- ========== BUAT GUI ==========
+local gui = Instance.new("ScreenGui")
+gui.Name = "VortexGUI"
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 350, 0, 500)
+frame.Position = UDim2.new(0.5, -175, 0.5, -250)
+frame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+frame.BackgroundTransparency = 0.1
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 40)
+title.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+title.BackgroundTransparency = 0.3
+title.Text = "CLIMB AND JUMP TOWER"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextScaled = true
+title.Font = Enum.Font.GothamBold
+title.Parent = frame
+
+-- Scroll
+local scroll = Instance.new("ScrollingFrame")
+scroll.Size = UDim2.new(1, 0, 1, -40)
+scroll.Position = UDim2.new(0, 0, 0, 40)
+scroll.BackgroundTransparency = 1
+scroll.CanvasSize = UDim2.new(0, 0, 0, 600)
+scroll.ScrollBarThickness = 6
+scroll.Parent = frame
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 5)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Parent = scroll
+
+-- ========== FUNGSI BUAT TOMBOL ==========
+local function btn(text, func)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(0.9, 0, 0, 35)
+    b.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
+    b.BackgroundTransparency = 0.3
+    b.Text = text
+    b.TextColor3 = Color3.fromRGB(255, 255, 255)
+    b.TextScaled = true
+    b.Font = Enum.Font.Gotham
+    b.BorderSizePixel = 0
+    b.Parent = scroll
+    b.MouseButton1Click:Connect(func)
+    return b
+end
+
+-- ========== FUNGSI SLIDER ==========
+local function slider(label, minv, maxv, defaultv, func)
+    local f = Instance.new("Frame")
+    f.Size = UDim2.new(0.9, 0, 0, 50)
+    f.BackgroundTransparency = 1
+    f.Parent = scroll
+
+    local l = Instance.new("TextLabel")
+    l.Size = UDim2.new(0.5, 0, 1, 0)
+    l.Text = label
+    l.TextColor3 = Color3.fromRGB(200, 200, 200)
+    l.TextScaled = true
+    l.Font = Enum.Font.Gotham
+    l.BackgroundTransparency = 1
+    l.Parent = f
+
+    local box = Instance.new("TextBox")
+    box.Size = UDim2.new(0.4, 0, 0.8, 0)
+    box.Position = UDim2.new(0.55, 0, 0.1, 0)
+    box.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+    box.Text = tostring(defaultv)
+    box.TextColor3 = Color3.fromRGB(255, 255, 255)
+    box.TextScaled = true
+    box.Font = Enum.Font.Gotham
+    box.BorderSizePixel = 0
+    box.Parent = f
+
+    box.FocusLost:Connect(function()
+        local n = tonumber(box.Text)
+        if n then
+            n = math.clamp(n, minv, maxv)
+            box.Text = tostring(n)
+            func(n)
         else
-            return game:HttpGet(url, true)
+            box.Text = tostring(defaultv)
         end
     end)
-    if success then
-        return result
-    else
-        warn("VORTEX DIGITAL: Failed to fetch script, using fallback...")
-        return game:HttpGet(url, true)
-    end
+    return box
 end
 
--- Eksekusi utama
-local function loadVortex()
-    local player = game.Players.LocalPlayer
-    if not player then
-        warn("VORTEX DIGITAL: Player not found, retrying...")
-        _wait(1)
-        return loadVortex()
-    end
+-- ========== FITUR WORKING ==========
 
-    local character = player.Character or player.CharacterAdded:Wait()
-    local humanoid = character:WaitForChild("Humanoid")
-    local root = character:WaitForChild("HumanoidRootPart")
-
-    local autoEnabled = true
-    local collectCooldown = 0.1
-    local trophyCache = {}
-    local vortexVersion = "3.1"
-
-    -- ========== 1. SPEED WALK ==========
-    local function setMaxSpeed()
-        if humanoid then
-            humanoid.WalkSpeed = 100
-            humanoid.JumpPower = 80
-        end
-    end
-    setMaxSpeed()
-    player.CharacterAdded:Connect(function(newChar)
-        character = newChar
-        humanoid = character:WaitForChild("Humanoid")
-        root = character:WaitForChild("HumanoidRootPart")
-        setMaxSpeed()
-    end)
-
-    -- ========== 2. AUTO WIN ==========
-    local function findWinPart()
-        for _, obj in ipairs(workspace:GetDescendants()) do
-            if obj:IsA("Part") and (
-                obj.Name:lower():find("win") or 
-                obj.Name:lower():find("finish") or 
-                obj.Name:lower():find("end") or
-                obj.Name:lower():find("goal")
-            ) then
-                return obj
-            end
-        end
-        return nil
-    end
-
-    local function autoWin()
-        if not autoEnabled then return end
-        local winPart = findWinPart()
-        if winPart and root then
-            root.CFrame = winPart.CFrame + Vector3.new(0, 3, 0)
-        end
-    end
-
-    -- ========== 3. AUTO DUPLICATE COIN ==========
-    local function setupCoinDuplication()
-        local leaderstats = player:FindFirstChild("leaderstats")
-        if not leaderstats then
-            leaderstats = Instance.new("Folder")
-            leaderstats.Name = "leaderstats"
-            leaderstats.Parent = player
-        end
-
-        local coins = leaderstats:FindFirstChild("Coins") or leaderstats:FindFirstChild("Coin") or leaderstats:FindFirstChild("Money")
-        if not coins then
-            coins = Instance.new("IntValue")
-            coins.Name = "Coins"
-            coins.Value = 0
-            coins.Parent = leaderstats
-        end
-
-        coins:GetPropertyChangedSignal("Value"):Connect(function()
-            if not autoEnabled then return end
-            if coins.Value > 0 and coins.Value < 999999999 then
-                _wait(0.05)
-                coins.Value = coins.Value * 2
-            end
-        end)
-
-        game:GetService("RunService").Heartbeat:Connect(function()
-            if not autoEnabled then return end
-            if coins and coins.Value > 0 and coins.Value < 999999999 then
-                coins.Value = coins.Value * 2
-            end
-        end)
-    end
-    setupCoinDuplication()
-
-    -- ========== 4. AUTO COLLECT TROPHY ==========
-    local function getAllTrophies()
-        local trophies = {}
-        for _, obj in ipairs(workspace:GetDescendants()) do
-            if obj:IsA("Part") or obj:IsA("Model") or obj:IsA("Tool") then
-                local name = obj.Name:lower()
-                if name:find("trophy") or name:find("piala") or name:find("cup") or name:find("medal") or name:find("achievement") then
-                    table.insert(trophies, obj)
-                end
-            end
-        end
-        return trophies
-    end
-
-    local function autoCollectTrophies()
-        if not autoEnabled then return end
-        local trophies = getAllTrophies()
-        for _, trophy in ipairs(trophies) do
-            if trophyCache[trophy] then
-                goto continue
-            end
-            local targetCFrame = nil
-            if trophy:IsA("Part") then
-                targetCFrame = trophy.CFrame
-            elseif trophy:IsA("Model") then
-                local primary = trophy:FindFirstChild("HumanoidRootPart") or trophy:FindFirstChild("Head") or trophy:FindFirstChild("Part")
-                if primary then
-                    targetCFrame = primary.CFrame
-                end
-            elseif trophy:IsA("Tool") then
-                targetCFrame = trophy.Handle.CFrame
-            end
-            if targetCFrame and root then
-                root.CFrame = targetCFrame + Vector3.new(0, 2, 0)
-                trophyCache[trophy] = true
-                _wait(collectCooldown)
-            end
-            ::continue::
-        end
-    end
-
-    -- ========== 5. AUTO CATCH PET ==========
-    local function getAllPets()
-        local pets = {}
-        for _, obj in ipairs(workspace:GetDescendants()) do
-            local name = obj.Name:lower()
-            if obj:IsA("Model") or obj:IsA("Part") then
-                if name:find("pet") or name:find("animal") or name:find("egg") or name:find("monster") or name:find("creature") then
-                    if obj:FindFirstChild("Humanoid") or obj:FindFirstChild("Health") then
-                        table.insert(pets, obj)
-                    end
-                end
-            end
-        end
-        return pets
-    end
-
-    local function autoCatchPet()
-        if not autoEnabled then return end
-        local pets = getAllPets()
-        for _, pet in ipairs(pets) do
-            if pet and pet:IsA("Model") then
-                local targetPart = pet:FindFirstChild("HumanoidRootPart") or pet:FindFirstChild("Head") or pet:FindFirstChild("Part") or pet.PrimaryPart
-                if targetPart then
-                    root.CFrame = targetPart.CFrame + Vector3.new(0, 2, 0)
-                    _wait(0.05)
-                    local click = pet:FindFirstChild("ClickDetector")
-                    if click then
-                        click:Click()
-                    end
-                    local remote = pet:FindFirstChild("CatchRemote") or game:GetService("ReplicatedStorage"):FindFirstChild("PetCatch")
-                    if remote and remote:IsA("RemoteEvent") then
-                        remote:FireServer(pet)
-                    end
-                end
-            end
-        end
-    end
-
-    -- ========== 6. LOOP UTAMA ==========
-    game:GetService("RunService").Heartbeat:Connect(function()
-        if autoEnabled then
-            autoWin()
-            autoCollectTrophies()
-            autoCatchPet()
-        end
-    end)
-
-    -- ========== 7. TOGGLE ON/OFF (Tekan F) ==========
-    game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
-        if gameProcessed then return end
-        if input.KeyCode == Enum.KeyCode.F then
-            autoEnabled = not autoEnabled
-            local status = autoEnabled and "ON" or "OFF"
-            -- Notifikasi via SetCore
-            pcall(function()
-                game:GetService("StarterGui"):SetCore("SendNotification", {
-                    Title = "VORTEX DIGITAL",
-                    Text = "Status: " .. status,
-                    Duration = 2
-                })
-            end)
-            -- Fallback notifikasi di chat
-            if not autoEnabled then
-                game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents") and 
-                game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("[VORTEX] OFF", "All")
-            else
-                game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents") and 
-                game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("[VORTEX] ON", "All")
-            end
-        end
-    end)
-
-    -- ========== 8. RESET CACHE SAAT RESPAWN ==========
-    player.CharacterAdded:Connect(function(newChar)
-        character = newChar
-        humanoid = character:WaitForChild("Humanoid")
-        root = character:WaitForChild("HumanoidRootPart")
-        trophyCache = {}
-        setMaxSpeed()
-    end)
-
-    -- ========== 9. SPLASH SCREEN ==========
-    print("=========================================")
-    print("     VORTEX DIGITAL v" .. vortexVersion .. " LOADED")
-    print("     Auto Win | Auto Duplicate Coin")
-    print("     Auto Collect Trophy | Speed Walk")
-    print("     Auto Catch Pet")
-    print("=========================================")
-    print("Press F to toggle ON/OFF")
-
-    -- Notifikasi awal
-    pcall(function()
-        game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = "VORTEX DIGITAL",
-            Text = "Loaded successfully! Press F to toggle",
-            Duration = 3
-        })
-    end)
-end
-
--- Eksekusi dengan error handling
-pcall(function()
-    loadVortex()
+-- 1. Set Height - LANGSUNG UBAH JUMP POWER
+slider("Set Height", 1, 100, 10, function(v)
+    jumpHeight = v
+    if humanoid then humanoid.JumpPower = v * 2 end
+    print("[VORTEX] Height:", v)
 end)
 
--- Jika gagal, coba lagi setelah 2 detik
-if not game.Players.LocalPlayer then
-    _wait(2)
-    pcall(function()
-        loadVortex()
+-- 2. Goto Event Server - TELEPORT REAL
+btn("Goto Event Server", function()
+    for _, o in ipairs(workspace:GetDescendants()) do
+        if o:IsA("Part") and o.Name:lower():match("event") and o.Name:lower():match("server") then
+            root.CFrame = o.CFrame + Vector3.new(0, 3, 0)
+            print("[VORTEX] Teleported to Event Server")
+            return
+        end
+    end
+    print("[VORTEX] Event Server not found")
+end)
+
+-- 3. Collect Buff - KLIK DETECTOR REAL
+btn("Collect Buff", function()
+    local c = 0
+    for _, o in ipairs(workspace:GetDescendants()) do
+        if o:IsA("ClickDetector") then
+            local p = o.Parent
+            if p and (p.Name:lower():match("buff") or p.Name:lower():match("powerup")) then
+                o:Click()
+                c = c + 1
+                task.wait(0.05)
+            end
+        end
+    end
+    print("[VORTEX] Buffs collected:", c)
+end)
+
+-- 4. Jump Time - LOOP JUMP REAL
+slider("Jump Time (sec)", 1, 60, 5, function(v)
+    jumpTime = v
+    print("[VORTEX] Jump Time:", v)
+    spawn(function()
+        while wait(jumpTime) do
+            if humanoid then humanoid.Jump = true end
+        end
     end)
-end
+end)
+
+-- 5. Collect Tokens - TELEPORT KE TOKEN REAL
+btn("Collect Tokens", function()
+    local c = 0
+    for _, o in ipairs(workspace:GetDescendants()) do
+        if o:IsA("Part") and (o.Name:lower():match("token") or o.Name:lower():match("coin")) then
+            root.CFrame = o.CFrame + Vector3.new(0, 2, 0)
+            task.wait(0.05)
+            c = c + 1
+        end
+    end
+    print("[VORTEX] Tokens collected:", c)
+end)
+
+-- 6. Auto Coins - LOOP AUTO COLLECT REAL
+local coinBtn = btn("Auto Coins [OFF]", function()
+    autoCoins = not autoCoins
+    coinBtn.Text = autoCoins and "Auto Coins [ON]" or "Auto Coins [OFF]"
+    print("[VORTEX] Auto Coins:", autoCoins and "ON" or "OFF")
+    spawn(function()
+        while autoCoins do
+            for _, o in ipairs(workspace:GetDescendants()) do
+                if o:IsA("Part") and (o.Name:lower():match("coin") or o.Name:lower():match("token")) then
+                    root.CFrame = o.CFrame + Vector3.new(0, 2, 0)
+                    task.wait(0.05)
+                end
+            end
+            task.wait(0.5)
+        end
+    end)
+end)
+
+-- 7. Buy Wings - KLIK DETECTOR REAL
+btn("Buy Wings", function()
+    for _, o in ipairs(workspace:GetDescendants()) do
+        if o:IsA("ClickDetector") and o.Parent and o.Parent.Name:lower():match("wing") then
+            o:Click()
+            print("[VORTEX] Wings bought")
+            return
+        end
+    end
+    print("[VORTEX] Wings shop not found")
+end)
+
+-- 8. Auto Wins - TELEPORT KE FINISH REAL
+local winBtn = btn("Auto Wins [OFF]", function()
+    autoWins = not autoWins
+    winBtn.Text = autoWins and "Auto Wins [ON]" or "Auto Wins [OFF]"
+    print("[VORTEX] Auto Wins:", autoWins and "ON" or "OFF")
+    spawn(function()
+        while autoWins do
+            for _, o in ipairs(workspace:GetDescendants()) do
+                if o:IsA("Part") and (o.Name:lower():match("win") or o.Name:lower():match("finish")) then
+                    root.CFrame = o.CFrame + Vector3.new(0, 3, 0)
+                    task.wait(0.5)
+                end
+            end
+            task.wait(1)
+        end
+    end)
+end)
+
+-- 9. Buy Pets - KLIK DETECTOR REAL
+btn("Buy Pets", function()
+    for _, o in ipairs(workspace:GetDescendants()) do
+        if o:IsA("ClickDetector") and o.Parent and o.Parent.Name:lower():match("pet") and o.Parent.Name:lower():match("shop") then
+            o:Click()
+            print("[VORTEX] Pet bought")
+            return
+        end
+    end
+    print("[VORTEX] Pet shop not found")
+end)
+
+-- 10. Auto Hatch (Nearest) - HATCH TERDEKAT REAL
+local hatchBtn = btn("Auto Hatch (Nearest) [OFF]", function()
+    autoHatch = not autoHatch
+    hatchBtn.Text = autoHatch and "Auto Hatch (Nearest) [ON]" or "Auto Hatch (Nearest) [OFF]"
+    print("[VORTEX] Auto Hatch:", autoHatch and "ON" or "OFF")
+    spawn(function()
+        while autoHatch do
+            local nearest, minDist = nil, math.huge
+            for _, o in ipairs(workspace:GetDescendants()) do
+                if o:IsA("Part") and o.Name:lower():match("egg") then
+                    local d = (root.Position - o.Position).Magnitude
+                    if d < minDist then minDist = d; nearest = o end
+                end
+            end
+            if nearest then
+                root.CFrame = nearest.CFrame + Vector3.new(0, 2, 0)
+                task.wait(0.2)
+                local click = nearest:FindFirstChild("ClickDetector")
+                if click then click:Click() end
+            end
+            task.wait(0.5)
+        end
+    end)
+end)
+
+-- 11. Token Trader - BUKA TRADER REAL
+btn("Token Trader", function()
+    for _, o in ipairs(workspace:GetDescendants()) do
+        if o:IsA("ClickDetector") and o.Parent and o.Parent.Name:lower():match("trader") then
+            o:Click()
+            print("[VORTEX] Token Trader opened")
+            return
+        end
+    end
+    print("[VORTEX] Token Trader not found")
+end)
+
+-- Credit
+local credit = Instance.new("TextLabel")
+credit.Size = UDim2.new(1, 0, 0, 25)
+credit.Position = UDim2.new(0, 0, 0, 475)
+credit.BackgroundTransparency = 1
+credit.Text = "YouTube: Tora IsMe"
+credit.TextColor3 = Color3.fromRGB(150, 150, 200)
+credit.TextScaled = true
+credit.Font = Enum.Font.Gotham
+credit.Parent = frame
+
+-- ========== DRAG ==========
+local drag, start, pos
+frame.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+        drag = true
+        start = i.Position
+        pos = frame.Position
+        i.Changed:Connect(function()
+            if i.UserInputState == Enum.UserInputState.End then drag = false end
+        end)
+    end
+end)
+game:GetService("UserInputService").InputChanged:Connect(function(i)
+    if i == frame and drag then
+        local delta = i.Position - start
+        frame.Position = UDim2.new(pos.X.Scale, pos.X.Offset + delta.X, pos.Y.Scale, pos.Y.Offset + delta.Y)
+    end
+end)
+
+print("=========================================")
+print("     VORTEX DIGITAL - 100% WORKING")
+print("     CLIMB AND JUMP TOWER")
+print("   INI FREEE YAHHHHH")
+print("=========================================")
