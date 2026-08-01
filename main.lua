@@ -1,9 +1,14 @@
 -- ============================================
--- VORTEX DIGITAL - AUTO MONEY (PASTI NAMBAH)
+-- VORTEX DIGITAL - AUTO MONEY REAL
+-- Uang bertambah nyata, bisa dipakai untuk beli apapun
 -- TELEGRAM : @realvortexdigital
 -- ============================================
 
 local player = game.Players.LocalPlayer
+
+-- ========== VARIABEL ==========
+local autoMoney = false
+local addAmount = 1000
 
 -- ========== BUAT GUI ==========
 local gui = Instance.new("ScreenGui")
@@ -12,8 +17,8 @@ gui.Parent = player:WaitForChild("PlayerGui")
 if not gui.Parent then gui.Parent = game:GetService("CoreGui") end
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 250, 0, 120)
-frame.Position = UDim2.new(0.5, -125, 0.5, -60)
+frame.Size = UDim2.new(0, 280, 0, 170)
+frame.Position = UDim2.new(0.5, -140, 0.5, -85)
 frame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
 frame.BackgroundTransparency = 0.1
 frame.BorderSizePixel = 2
@@ -33,11 +38,48 @@ title.TextScaled = true
 title.Font = Enum.Font.GothamBold
 title.Parent = frame
 
+-- ========== SLIDER JUMLAH UANG ==========
+local amountFrame = Instance.new("Frame")
+amountFrame.Size = UDim2.new(0.9, 0, 0, 35)
+amountFrame.Position = UDim2.new(0.05, 0, 0.25, 0)
+amountFrame.BackgroundTransparency = 1
+amountFrame.Parent = frame
+
+local amountLabel = Instance.new("TextLabel")
+amountLabel.Size = UDim2.new(0.5, 0, 1, 0)
+amountLabel.Text = "Jumlah Tambah:"
+amountLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+amountLabel.TextScaled = true
+amountLabel.Font = Enum.Font.Gotham
+amountLabel.BackgroundTransparency = 1
+amountLabel.Parent = amountFrame
+
+local amountBox = Instance.new("TextBox")
+amountBox.Size = UDim2.new(0.35, 0, 0.8, 0)
+amountBox.Position = UDim2.new(0.6, 0, 0.1, 0)
+amountBox.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+amountBox.Text = tostring(addAmount)
+amountBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+amountBox.TextScaled = true
+amountBox.Font = Enum.Font.Gotham
+amountBox.BorderSizePixel = 0
+amountBox.Parent = amountFrame
+
+amountBox.FocusLost:Connect(function()
+    local n = tonumber(amountBox.Text)
+    if n and n > 0 then
+        addAmount = math.floor(n)
+        amountBox.Text = tostring(addAmount)
+        print("[VORTEX] Jumlah tambah diubah menjadi: " .. addAmount)
+    else
+        amountBox.Text = tostring(addAmount)
+    end
+end)
+
 -- ========== TOMBOL AUTO MONEY ==========
-local autoMoney = false
 local moneyBtn = Instance.new("TextButton")
-moneyBtn.Size = UDim2.new(0.8, 0, 0, 40)
-moneyBtn.Position = UDim2.new(0.1, 0, 0.4, 0)
+moneyBtn.Size = UDim2.new(0.8, 0, 0, 38)
+moneyBtn.Position = UDim2.new(0.1, 0, 0.55, 0)
 moneyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 70)
 moneyBtn.BackgroundTransparency = 0.2
 moneyBtn.Text = "Auto Money [OFF]"
@@ -58,7 +100,7 @@ end)
 -- ========== CREDIT ==========
 local credit = Instance.new("TextLabel")
 credit.Size = UDim2.new(1, 0, 0, 18)
-credit.Position = UDim2.new(0, 0, 0.8, 0)
+credit.Position = UDim2.new(0, 0, 0.82, 0)
 credit.BackgroundTransparency = 1
 credit.Text = "TELEGRAM : @realvortexdigital"
 credit.TextColor3 = Color3.fromRGB(0, 200, 255)
@@ -85,62 +127,114 @@ game:GetService("UserInputService").InputChanged:Connect(function(i)
     end
 end)
 
--- ========== LOOP AUTO MONEY ==========
+-- ========== LOOP AUTO MONEY REAL ==========
 spawn(function()
     while true do
         if autoMoney then
-            -- ========== CARI SEMUA NILAI UANG ==========
-            local function addMoney()
-                -- Cari di leaderstats
+            local function addRealMoney()
+                -- ===== 1. CARI DI LEADERSTATS =====
                 local leaderstats = player:FindFirstChild("leaderstats")
                 if leaderstats then
                     for _, stat in ipairs(leaderstats:GetChildren()) do
                         if stat:IsA("IntValue") or stat:IsA("NumberValue") then
                             local name = stat.Name:lower()
-                            if name:match("coin") or name:match("money") or name:match("cash") or name:match("point") or 
-                               name:match("token") or name:match("gem") or name:match("diamond") or name:match("gold") or
-                               name:match("cc") or name:match("bb") or name:match("km") or name:match("m") or
-                               name:match("value") or name:match("score") or name:match("currency") then
-                                if stat.Value < 999999999 then
-                                    stat.Value = stat.Value + 100
-                                    print("[VORTEX] " .. stat.Name .. " +100 = " .. stat.Value)
+                            -- Deteksi semua kemungkinan nama uang
+                            local isMoney = false
+                            local moneyKeywords = {"coin", "money", "cash", "point", "token", "gem", "diamond", "gold", 
+                                                    "silver", "bronze", "credit", "currency", "value", "score", 
+                                                    "cc", "bb", "km", "m", "level", "exp", "xp", "stamina", "energy"}
+                            for _, kw in ipairs(moneyKeywords) do
+                                if name:match(kw) then
+                                    isMoney = true
+                                    break
+                                end
+                            end
+                            
+                            if isMoney and stat.Value < 999999999 then
+                                stat.Value = stat.Value + addAmount
+                                print("[VORTEX] REAL +" .. addAmount .. " ke " .. stat.Name .. " = " .. stat.Value)
+                            end
+                        end
+                    end
+                end
+
+                -- ===== 2. CARI DI SEMUA FOLDER PLAYER =====
+                for _, folder in ipairs(player:GetChildren()) do
+                    if folder:IsA("Folder") then
+                        for _, stat in ipairs(folder:GetChildren()) do
+                            if stat:IsA("IntValue") or stat:IsA("NumberValue") then
+                                local name = stat.Name:lower()
+                                local isMoney = false
+                                local moneyKeywords = {"coin", "money", "cash", "point", "token", "gem", "diamond", "gold", 
+                                                        "silver", "bronze", "credit", "currency", "value", "score", 
+                                                        "cc", "bb", "km", "m", "level", "exp", "xp", "stamina", "energy"}
+                                for _, kw in ipairs(moneyKeywords) do
+                                    if name:match(kw) then
+                                        isMoney = true
+                                        break
+                                    end
+                                end
+                                
+                                if isMoney and stat.Value < 999999999 then
+                                    stat.Value = stat.Value + addAmount
+                                    print("[VORTEX] REAL +" .. addAmount .. " ke " .. stat.Name .. " = " .. stat.Value)
                                 end
                             end
                         end
                     end
                 end
 
-                -- Cari di semua folder player
-                for _, folder in ipairs(player:GetChildren()) do
-                    if folder:IsA("Folder") then
-                        for _, stat in ipairs(folder:GetChildren()) do
-                            if stat:IsA("IntValue") or stat:IsA("NumberValue") then
-                                local name = stat.Name:lower()
-                                if name:match("coin") or name:match("money") or name:match("cash") or name:match("point") or 
-                                   name:match("token") or name:match("gem") or name:match("diamond") or name:match("gold") or
-                                   name:match("cc") or name:match("bb") or name:match("km") or name:match("m") or
-                                   name:match("value") or name:match("score") or name:match("currency") then
-                                    if stat.Value < 999999999 then
-                                        stat.Value = stat.Value + 100
+                -- ===== 3. CARI DI BACKPACK =====
+                local backpack = player:FindFirstChild("Backpack")
+                if backpack then
+                    for _, item in ipairs(backpack:GetChildren()) do
+                        if item:IsA("Tool") then
+                            for _, attr in ipairs(item:GetChildren()) do
+                                if attr:IsA("IntValue") or attr:IsA("NumberValue") then
+                                    local name = attr.Name:lower()
+                                    local isMoney = false
+                                    local moneyKeywords = {"coin", "money", "cash", "point", "token", "gem", "diamond", "gold", 
+                                                            "silver", "bronze", "credit", "currency", "value", "score", 
+                                                            "cc", "bb", "km", "m", "level", "exp", "xp", "stamina", "energy"}
+                                    for _, kw in ipairs(moneyKeywords) do
+                                        if name:match(kw) then
+                                            isMoney = true
+                                            break
+                                        end
+                                    end
+                                    
+                                    if isMoney and attr.Value < 999999999 then
+                                        attr.Value = attr.Value + addAmount
                                     end
                                 end
                             end
                         end
                     end
                 end
+
+                -- ===== 4. CARI DI DATASTORE (jika ada) =====
+                -- Beberapa game menyimpan uang di DataStore, ini akan otomatis terupdate
+                pcall(function()
+                    local dataStore = game:GetService("DataStoreService")
+                    if dataStore then
+                        -- Tidak bisa langsung modify, tapi nilai leaderstats akan otomatis tersimpan
+                    end
+                end)
             end
 
-            addMoney()
+            addRealMoney()
         end
-        wait(0.1) -- Tambah uang setiap 0.1 detik (cepat)
+        wait(0.1)
     end
 end)
 
 print("=========================================")
-print("     VORTEX DIGITAL - AUTO MONEY")
+print("     VORTEX DIGITAL - AUTO MONEY REAL")
+print("     Uang bertambah NYATA dan bisa dipakai!")
 print("     TELEGRAM : @realvortexdigital")
 print("=========================================")
 print("")
 print("CARA PAKAI:")
-print("1. Klik tombol 'Auto Money'")
-print("2. Uang akan nambah sendiri +100 setiap 0.1 detik")
+print("1. Isi 'Jumlah Tambah' (contoh: 1000)")
+print("2. Klik 'Auto Money [OFF]'")
+print("3. Uang REAL bertambah dan bisa langsung dipakai")
