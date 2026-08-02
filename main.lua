@@ -1,6 +1,7 @@
 -- ============================================
--- VORTEX FAST CLIMB TOWER - SPEED 500
--- Cepat 500 saat di tower, normal 16 saat di tanah
+-- VORTEX FAST CLIMB TOWER - AUTO FAST CLIMB
+-- Manjat tower cepat tanpa auto jump
+-- Speed 500 saat di tower, normal 16 saat di tanah
 -- TELEGRAM : @realvortexdigital
 -- ============================================
 
@@ -35,6 +36,22 @@ local function isClimbing()
     return false
 end
 
+-- ========== FUNGSI AUTO FAST CLIMB ==========
+local function autoFastClimb()
+    if not fastClimbEnabled or not humanoid then return end
+    
+    if isClimbing() then
+        -- Saat di tower → speed 500, tanpa jump
+        humanoid.WalkSpeed = climbSpeed
+        -- Tetap gunakan JumpPower tinggi tapi tidak auto jump
+        humanoid.JumpPower = 250
+    else
+        -- Saat di tanah → normal 16
+        humanoid.WalkSpeed = normalSpeed
+        humanoid.JumpPower = 50
+    end
+end
+
 -- ========== BUAT GUI ==========
 local gui = Instance.new("ScreenGui")
 gui.Name = "VortexFastClimb"
@@ -57,7 +74,7 @@ local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 35)
 title.BackgroundColor3 = Color3.fromRGB(25, 25, 50)
 title.BackgroundTransparency = 0.3
-title.Text = "VORTEX FAST CLIMB - 500"
+title.Text = "VORTEX FAST CLIMB"
 title.TextColor3 = Color3.fromRGB(0, 200, 255)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
@@ -69,7 +86,7 @@ fastClimbBtn.Size = UDim2.new(0.8, 0, 0, 40)
 fastClimbBtn.Position = UDim2.new(0.1, 0, 0.4, 0)
 fastClimbBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 70)
 fastClimbBtn.BackgroundTransparency = 0.2
-fastClimbBtn.Text = "Fast Climb 500 [OFF]"
+fastClimbBtn.Text = "Fast Climb [OFF]"
 fastClimbBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 fastClimbBtn.TextScaled = true
 fastClimbBtn.Font = Enum.Font.GothamBold
@@ -79,28 +96,14 @@ fastClimbBtn.Parent = frame
 
 fastClimbBtn.MouseButton1Click:Connect(function()
     fastClimbEnabled = not fastClimbEnabled
-    fastClimbBtn.Text = fastClimbEnabled and "Fast Climb 500 [ON]" or "Fast Climb 500 [OFF]"
+    fastClimbBtn.Text = fastClimbEnabled and "Fast Climb [ON]" or "Fast Climb [OFF]"
     fastClimbBtn.BackgroundColor3 = fastClimbEnabled and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(40, 40, 70)
-    print("[VORTEX] Fast Climb 500: " .. (fastClimbEnabled and "ON" or "OFF"))
+    print("[VORTEX] Fast Climb: " .. (fastClimbEnabled and "ON" or "OFF"))
 end)
 
--- ========== LOOP DETEKSI CLIMB ==========
-spawn(function()
-    while true do
-        if fastClimbEnabled and humanoid then
-            if isClimbing() then
-                -- Saat di tower / climbing → SPEED 500
-                humanoid.WalkSpeed = climbSpeed
-                humanoid.JumpPower = 250
-                humanoid.Jump = true
-            else
-                -- Saat di tanah → normal 16
-                humanoid.WalkSpeed = normalSpeed
-                humanoid.JumpPower = 50
-            end
-        end
-        wait(0.05)
-    end
+-- ========== LOOP DETEKSI CLIMB (TANPA AUTO JUMP) ==========
+game:GetService("RunService").Heartbeat:Connect(function()
+    autoFastClimb()
 end)
 
 -- ========== CREDIT ==========
@@ -134,13 +137,14 @@ game:GetService("UserInputService").InputChanged:Connect(function(i)
 end)
 
 print("=========================================")
-print("     VORTEX FAST CLIMB TOWER - 500")
+print("     VORTEX FAST CLIMB TOWER")
+print("     Auto fast climb tanpa auto jump")
 print("     Speed 500 saat di tower")
 print("     Speed 16 saat di tanah")
 print("     TELEGRAM : @realvortexdigital")
 print("=========================================")
 print("")
 print("CARA PAKAI:")
-print("1. Klik 'Fast Climb 500 [OFF]' untuk mengaktifkan")
-print("2. Saat di tower → speed 500, auto jump")
+print("1. Klik 'Fast Climb [OFF]' untuk mengaktifkan")
+print("2. Saat di tower → speed 500 (tanpa auto jump)")
 print("3. Saat di tanah → speed normal 16")
