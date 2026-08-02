@@ -1,6 +1,6 @@
 -- ============================================
--- VORTEX ALL IN ONE - NO KEY SYSTEM
--- Gabungan Semua Fitur: Auto Buy | Auto Claim | Auto Climb | Auto Coins | Auto Egg | Auto Farm | Auto Hatch | Auto Win | Big Jump | Fast Climb | Money Boost | Teleport | dll
+-- VORTEX FAST CLIMB TOWER - SPEED 500
+-- Cepat 500 saat di tower, normal 16 saat di tanah
 -- TELEGRAM : @realvortexdigital
 -- ============================================
 
@@ -9,31 +9,41 @@ local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 local root = character:WaitForChild("HumanoidRootPart")
 
--- ========== VARIABEL TOGGLE ==========
-local showMenu = true
-local autoBuy = false
-local autoClaim = false
-local autoClimb = false
-local autoCoins = false
-local autoEgg = false
-local autoFarm = false
-local autoHatch = false
-local autoWin = false
-local bigJump = false
-local fastClimb = false
-local moneyBoost = false
-local teleport = false
+-- ========== VARIABEL ==========
+local fastClimbEnabled = false
+local normalSpeed = 16
+local climbSpeed = 500
+
+-- ========== FUNGSI DETEKSI CLIMB ==========
+local function isClimbing()
+    if not root then return false end
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterDescendantsInstances = {character}
+    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+    
+    local origin = root.Position
+    local direction = root.CFrame.LookVector * 5
+    local rayResult = workspace:Raycast(origin, direction, raycastParams)
+    
+    if rayResult then
+        local normal = rayResult.Normal
+        local angle = math.deg(math.acos(normal:Dot(Vector3.new(0, 1, 0))))
+        if angle > 70 and angle < 110 then
+            return true
+        end
+    end
+    return false
+end
 
 -- ========== BUAT GUI ==========
 local gui = Instance.new("ScreenGui")
-gui.Name = "VortexAllInOne"
+gui.Name = "VortexFastClimb"
 gui.Parent = player:WaitForChild("PlayerGui")
 if not gui.Parent then gui.Parent = game:GetService("CoreGui") end
 
--- ========== FRAME UTAMA ==========
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 350, 0, 500)
-frame.Position = UDim2.new(0.5, -175, 0.5, -250)
+frame.Size = UDim2.new(0, 250, 0, 120)
+frame.Position = UDim2.new(0.5, -125, 0.5, -60)
 frame.BackgroundColor3 = Color3.fromRGB(10, 10, 25)
 frame.BackgroundTransparency = 0.05
 frame.BorderSizePixel = 2
@@ -42,321 +52,95 @@ frame.Active = true
 frame.Draggable = true
 frame.Parent = gui
 
--- ========== TITLE BAR ==========
-local titleBar = Instance.new("Frame")
-titleBar.Size = UDim2.new(1, 0, 0, 40)
-titleBar.BackgroundColor3 = Color3.fromRGB(25, 25, 50)
-titleBar.BackgroundTransparency = 0.3
-titleBar.Parent = frame
-
+-- Title
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(0.6, 0, 1, 0)
-title.Position = UDim2.new(0.05, 0, 0, 0)
-title.BackgroundTransparency = 1
-title.Text = "VORTEX ALL IN ONE"
+title.Size = UDim2.new(1, 0, 0, 35)
+title.BackgroundColor3 = Color3.fromRGB(25, 25, 50)
+title.BackgroundTransparency = 0.3
+title.Text = "VORTEX FAST CLIMB - 500"
 title.TextColor3 = Color3.fromRGB(0, 200, 255)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
-title.Parent = titleBar
+title.Parent = frame
 
--- ========== TOMBOL CLOSE MENU ==========
-local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, 35, 0, 35)
-closeBtn.Position = UDim2.new(0.85, 0, 0.02, 0)
-closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-closeBtn.BackgroundTransparency = 0.2
-closeBtn.Text = "✕"
-closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeBtn.TextScaled = true
-closeBtn.Font = Enum.Font.GothamBold
-closeBtn.BorderSizePixel = 1
-closeBtn.BorderColor3 = Color3.fromRGB(150, 50, 50)
-closeBtn.Parent = titleBar
+-- Tombol Toggle
+local fastClimbBtn = Instance.new("TextButton")
+fastClimbBtn.Size = UDim2.new(0.8, 0, 0, 40)
+fastClimbBtn.Position = UDim2.new(0.1, 0, 0.4, 0)
+fastClimbBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 70)
+fastClimbBtn.BackgroundTransparency = 0.2
+fastClimbBtn.Text = "Fast Climb 500 [OFF]"
+fastClimbBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+fastClimbBtn.TextScaled = true
+fastClimbBtn.Font = Enum.Font.GothamBold
+fastClimbBtn.BorderSizePixel = 1
+fastClimbBtn.BorderColor3 = Color3.fromRGB(0, 100, 200)
+fastClimbBtn.Parent = frame
 
-closeBtn.MouseButton1Click:Connect(function()
-    showMenu = not showMenu
-    scroll.Visible = showMenu
-    statusBar.Visible = showMenu
-    frame.Size = showMenu and UDim2.new(0, 350, 0, 500) or UDim2.new(0, 350, 0, 45)
+fastClimbBtn.MouseButton1Click:Connect(function()
+    fastClimbEnabled = not fastClimbEnabled
+    fastClimbBtn.Text = fastClimbEnabled and "Fast Climb 500 [ON]" or "Fast Climb 500 [OFF]"
+    fastClimbBtn.BackgroundColor3 = fastClimbEnabled and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(40, 40, 70)
+    print("[VORTEX] Fast Climb 500: " .. (fastClimbEnabled and "ON" or "OFF"))
 end)
 
--- ========== SCROLL ==========
-local scroll = Instance.new("ScrollingFrame")
-scroll.Size = UDim2.new(1, -10, 1, -50)
-scroll.Position = UDim2.new(0, 5, 0, 42)
-scroll.BackgroundTransparency = 1
-scroll.CanvasSize = UDim2.new(0, 0, 0, 550)
-scroll.ScrollBarThickness = 6
-scroll.Parent = frame
-
-local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0, 4)
-layout.SortOrder = Enum.SortOrder.LayoutOrder
-layout.Parent = scroll
-
--- ========== FUNGSI TOMBOL TOGGLE ==========
-local function toggleButton(text, getter, setter)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.9, 0, 0, 35)
-    btn.Position = UDim2.new(0.05, 0, 0, 0)
-    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 70)
-    btn.BackgroundTransparency = 0.2
-    btn.Text = text .. " [OFF]"
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextScaled = true
-    btn.Font = Enum.Font.Gotham
-    btn.BorderSizePixel = 1
-    btn.BorderColor3 = Color3.fromRGB(0, 100, 200)
-    btn.Parent = scroll
-    btn.MouseButton1Click:Connect(function()
-        local newState = not getter()
-        setter(newState)
-        btn.Text = text .. (newState and " [ON]" or " [OFF]")
-        btn.BackgroundColor3 = newState and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(40, 40, 70)
-        print("[VORTEX] " .. text .. ": " .. (newState and "ON" or "OFF"))
-    end)
-    return btn
-end
-
--- ========== SEMUA FITUR ==========
-
--- 1. Auto Buy
-toggleButton("Auto Buy", function() return autoBuy end, function(v)
-    autoBuy = v
-    spawn(function()
-        while autoBuy do
-            for _, btn in ipairs(player.PlayerGui:GetDescendants()) do
-                if btn:IsA("TextButton") and btn.Text:lower():match("buy") then
-                    btn:Click()
-                    wait(0.05)
-                end
-            end
-            wait(0.5)
-        end
-    end)
-end)
-
--- 2. Auto Claim
-toggleButton("Auto Claim", function() return autoClaim end, function(v)
-    autoClaim = v
-    spawn(function()
-        while autoClaim do
-            for _, btn in ipairs(player.PlayerGui:GetDescendants()) do
-                if btn:IsA("TextButton") and (btn.Text:lower():match("claim") or btn.Text:lower():match("collect")) then
-                    btn:Click()
-                    wait(0.05)
-                end
-            end
-            wait(0.5)
-        end
-    end)
-end)
-
--- 3. Auto Climb
-toggleButton("Auto Climb", function() return autoClimb end, function(v)
-    autoClimb = v
-    spawn(function()
-        while autoClimb do
-            if humanoid then
+-- ========== LOOP DETEKSI CLIMB ==========
+spawn(function()
+    while true do
+        if fastClimbEnabled and humanoid then
+            if isClimbing() then
+                -- Saat di tower / climbing → SPEED 500
+                humanoid.WalkSpeed = climbSpeed
+                humanoid.JumpPower = 250
                 humanoid.Jump = true
-                humanoid.WalkSpeed = 50
+            else
+                -- Saat di tanah → normal 16
+                humanoid.WalkSpeed = normalSpeed
+                humanoid.JumpPower = 50
             end
-            wait(0.1)
         end
-    end)
-end)
-
--- 4. Auto Coins
-toggleButton("Auto Coins", function() return autoCoins end, function(v)
-    autoCoins = v
-    spawn(function()
-        while autoCoins do
-            local leaderstats = player:FindFirstChild("leaderstats")
-            if leaderstats then
-                for _, stat in ipairs(leaderstats:GetChildren()) do
-                    if stat:IsA("IntValue") or stat:IsA("NumberValue") then
-                        if stat.Value > 0 and stat.Value < 999999999 then
-                            stat.Value = stat.Value * 2
-                        end
-                    end
-                end
-            end
-            wait(0.5)
-        end
-    end)
-end)
-
--- 5. Auto Egg
-toggleButton("Auto Egg", function() return autoEgg end, function(v)
-    autoEgg = v
-    spawn(function()
-        while autoEgg do
-            for _, obj in ipairs(workspace:GetDescendants()) do
-                if obj:IsA("ClickDetector") or obj:IsA("ProximityPrompt") then
-                    local p = obj.Parent
-                    if p and p.Name:lower():match("egg") then
-                        if obj:IsA("ClickDetector") then
-                            obj:Click()
-                        elseif obj:IsA("ProximityPrompt") then
-                            obj:InputHoldStart()
-                            wait(0.1)
-                            obj:InputHoldEnd()
-                        end
-                        wait(0.1)
-                    end
-                end
-            end
-            wait(0.5)
-        end
-    end)
-end)
-
--- 6. Auto Farm
-toggleButton("Auto Farm", function() return autoFarm end, function(v)
-    autoFarm = v
-    spawn(function()
-        while autoFarm do
-            for _, obj in ipairs(workspace:GetDescendants()) do
-                if obj:IsA("Part") and obj.Name:lower():match("farm") then
-                    if root then
-                        root.CFrame = obj.CFrame + Vector3.new(0, 2, 0)
-                        wait(0.1)
-                        local click = obj:FindFirstChild("ClickDetector")
-                        if click then click:Click() end
-                    end
-                end
-            end
-            wait(0.5)
-        end
-    end)
-end)
-
--- 7. Auto Hatch
-toggleButton("Auto Hatch", function() return autoHatch end, function(v)
-    autoHatch = v
-    spawn(function()
-        while autoHatch do
-            for _, btn in ipairs(player.PlayerGui:GetDescendants()) do
-                if btn:IsA("TextButton") and btn.Text:lower():match("hatch") then
-                    btn:Click()
-                    wait(0.1)
-                end
-            end
-            wait(0.5)
-        end
-    end)
-end)
-
--- 8. Auto Win
-toggleButton("Auto Win", function() return autoWin end, function(v)
-    autoWin = v
-    spawn(function()
-        while autoWin do
-            for _, obj in ipairs(workspace:GetDescendants()) do
-                if obj:IsA("Part") and (obj.Name:lower():match("win") or obj.Name:lower():match("finish")) then
-                    if root then
-                        root.CFrame = obj.CFrame + Vector3.new(0, 3, 0)
-                        wait(0.5)
-                    end
-                end
-            end
-            wait(1)
-        end
-    end)
-end)
-
--- 9. Big Jump
-toggleButton("Big Jump", function() return bigJump end, function(v)
-    bigJump = v
-    if v then
-        humanoid.JumpPower = 200
-    else
-        humanoid.JumpPower = 50
+        wait(0.05)
     end
 end)
 
--- 10. Fast Climb
-toggleButton("Fast Climb", function() return fastClimb end, function(v)
-    fastClimb = v
-    spawn(function()
-        while fastClimb do
-            if humanoid then
-                humanoid.WalkSpeed = 100
-                humanoid.JumpPower = 150
-            end
-            wait(0.05)
-        end
-    end)
+-- ========== CREDIT ==========
+local credit = Instance.new("TextLabel")
+credit.Size = UDim2.new(1, 0, 0, 18)
+credit.Position = UDim2.new(0, 0, 0.8, 0)
+credit.BackgroundTransparency = 1
+credit.Text = "TELEGRAM : @realvortexdigital"
+credit.TextColor3 = Color3.fromRGB(0, 200, 255)
+credit.TextScaled = true
+credit.Font = Enum.Font.GothamBold
+credit.Parent = frame
+
+-- ========== DRAG ==========
+local drag, start, pos
+frame.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+        drag = true
+        start = i.Position
+        pos = frame.Position
+        i.Changed:Connect(function()
+            if i.UserInputState == Enum.UserInputState.End then drag = false end
+        end)
+    end
+end)
+game:GetService("UserInputService").InputChanged:Connect(function(i)
+    if i == frame and drag then
+        local delta = i.Position - start
+        frame.Position = UDim2.new(pos.X.Scale, pos.X.Offset + delta.X, pos.Y.Scale, pos.Y.Offset + delta.Y)
+    end
 end)
 
--- 11. Money Boost
-toggleButton("Money Boost", function() return moneyBoost end, function(v)
-    moneyBoost = v
-    spawn(function()
-        while moneyBoost do
-            local leaderstats = player:FindFirstChild("leaderstats")
-            if leaderstats then
-                for _, stat in ipairs(leaderstats:GetChildren()) do
-                    if stat:IsA("IntValue") or stat:IsA("NumberValue") then
-                        if stat.Value < 999999999 then
-                            stat.Value = stat.Value + 1000
-                        end
-                    end
-                end
-            end
-            wait(0.5)
-        end
-    end)
-end)
-
--- 12. Teleport
-toggleButton("Teleport", function() return teleport end, function(v)
-    teleport = v
-    spawn(function()
-        while teleport do
-            for _, obj in ipairs(workspace:GetDescendants()) do
-                if obj:IsA("Part") and obj.Name:lower():match("teleport") then
-                    if root then
-                        root.CFrame = obj.CFrame + Vector3.new(0, 3, 0)
-                        wait(0.5)
-                    end
-                end
-            end
-            wait(1)
-        end
-    end)
-end)
-
--- ========== STATUS BAR ==========
-local statusBar = Instance.new("Frame")
-statusBar.Size = UDim2.new(1, 0, 0, 30)
-statusBar.Position = UDim2.new(0, 0, 1, -30)
-statusBar.BackgroundColor3 = Color3.fromRGB(20, 20, 40)
-statusBar.BackgroundTransparency = 0.1
-statusBar.Parent = frame
-
-local statusText = Instance.new("TextLabel")
-statusText.Size = UDim2.new(1, -10, 1, 0)
-statusText.Position = UDim2.new(0, 5, 0, 0)
-statusText.BackgroundTransparency = 1
-statusText.Text = "VORTEX ALL IN ONE | TELEGRAM : @realvortexdigital"
-statusText.TextColor3 = Color3.fromRGB(200, 200, 200)
-statusText.TextScaled = true
-statusText.Font = Enum.Font.Gotham
-statusText.TextXAlignment = Enum.TextXAlignment.Left
-statusText.Parent = statusBar
-
--- ========== NOTIFIKASI ==========
 print("=========================================")
-print("     VORTEX ALL IN ONE - NO KEY SYSTEM")
-print("     Auto Buy | Auto Claim | Auto Climb")
-print("     Auto Coins | Auto Egg | Auto Farm")
-print("     Auto Hatch | Auto Win | Big Jump")
-print("     Fast Climb | Money Boost | Teleport")
+print("     VORTEX FAST CLIMB TOWER - 500")
+print("     Speed 500 saat di tower")
+print("     Speed 16 saat di tanah")
 print("     TELEGRAM : @realvortexdigital")
 print("=========================================")
 print("")
 print("CARA PAKAI:")
-print("1. Klik tombol fitur untuk ON/OFF")
-print("2. Klik ✕ untuk close menu")
-print("3. Klik title bar untuk show menu kembali")
+print("1. Klik 'Fast Climb 500 [OFF]' untuk mengaktifkan")
+print("2. Saat di tower → speed 500, auto jump")
+print("3. Saat di tanah → speed normal 16")
