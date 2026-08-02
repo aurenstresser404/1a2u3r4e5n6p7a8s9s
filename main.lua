@@ -1,7 +1,6 @@
 -- ============================================
--- VORTEX FAST CLIMB TOWER - VELOCITY
--- Manjat tower cepat dengan velocity, tanpa auto jump
--- Speed 500 saat di tower, normal 16 saat di tanah
+-- VORTEX FAST CLIMB TOWER - CLAIM COIN & PIALA
+-- Manjat cepat + tetap claim coin & piala
 -- TELEGRAM : @realvortexdigital
 -- ============================================
 
@@ -14,7 +13,7 @@ local root = character:WaitForChild("HumanoidRootPart")
 local fastClimbEnabled = false
 local normalSpeed = 16
 local climbSpeed = 500
-local climbUpForce = 80  -- Kekuatan dorong ke atas saat climb
+local climbUpForce = 80
 
 -- ========== FUNGSI DETEKSI CLIMB ==========
 local function isClimbing()
@@ -37,6 +36,29 @@ local function isClimbing()
     return false, nil
 end
 
+-- ========== FUNGSI CLAIM COIN & PIALA ==========
+local function claimItems()
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("Part") or obj:IsA("Model") then
+            local name = obj.Name:lower()
+            -- Deteksi coin / piala / trophy
+            if name:match("coin") or name:match("piala") or name:match("trophy") or name:match("cup") or name:match("medal") or name:match("reward") then
+                local target = obj:IsA("Part") and obj or obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Part")
+                if target and root then
+                    -- Teleport ke item
+                    root.CFrame = target.CFrame + Vector3.new(0, 2, 0)
+                    wait(0.05)
+                    -- Klik ClickDetector jika ada
+                    local click = obj:FindFirstChild("ClickDetector") or target:FindFirstChild("ClickDetector")
+                    if click then
+                        click:Click()
+                    end
+                end
+            end
+        end
+    end
+end
+
 -- ========== FUNGSI AUTO FAST CLIMB ==========
 local function autoFastClimb()
     if not fastClimbEnabled or not humanoid or not root then return end
@@ -46,20 +68,18 @@ local function autoFastClimb()
     if climbing then
         -- Saat di tower → kecepatan tinggi + dorongan ke atas
         humanoid.WalkSpeed = climbSpeed
-        humanoid.JumpPower = 50 -- normal, tidak auto jump
+        humanoid.JumpPower = 50
         
         -- Dorong karakter ke atas menggunakan Velocity
         local currentVel = root.Velocity
         local upVelocity = Vector3.new(0, climbUpForce, 0)
-        
-        -- Tambahkan dorongan ke arah dinding agar tetap menempel
         local wallPush = normal * -20
         
-        -- Gabungkan kecepatan: ke atas + ke dinding
         root.Velocity = Vector3.new(currentVel.X * 0.5, climbUpForce, currentVel.Z * 0.5) + wallPush
-        
-        -- Rotasi karakter menghadap dinding agar climb mulus
         root.CFrame = CFrame.lookAt(root.Position, root.Position + normal * -1)
+        
+        -- ===== CLAIM COIN & PIALA SAAT CLIMB =====
+        claimItems()
         
     else
         -- Saat di tanah → normal
@@ -154,13 +174,8 @@ end)
 
 print("=========================================")
 print("     VORTEX FAST CLIMB TOWER")
-print("     Manjat cepat dengan velocity")
+print("     Manjat cepat + claim coin & piala")
 print("     Speed 500 saat di tower")
 print("     Speed 16 saat di tanah")
 print("     TELEGRAM : @realvortexdigital")
 print("=========================================")
-print("")
-print("CARA PAKAI:")
-print("1. Klik 'Fast Climb [OFF]' untuk mengaktifkan")
-print("2. Saat di tower → manjat cepat (tanpa lompat)")
-print("3. Saat di tanah → speed normal 16")
