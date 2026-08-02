@@ -1,6 +1,6 @@
 -- ============================================
--- VORTEX FAST CLIMB TOWER - AUTO FAST CLIMB
--- Manjat tower cepat tanpa auto jump
+-- VORTEX FAST CLIMB TOWER - VELOCITY
+-- Manjat tower cepat dengan velocity, tanpa auto jump
 -- Speed 500 saat di tower, normal 16 saat di tanah
 -- TELEGRAM : @realvortexdigital
 -- ============================================
@@ -14,6 +14,7 @@ local root = character:WaitForChild("HumanoidRootPart")
 local fastClimbEnabled = false
 local normalSpeed = 16
 local climbSpeed = 500
+local climbUpForce = 80  -- Kekuatan dorong ke atas saat climb
 
 -- ========== FUNGSI DETEKSI CLIMB ==========
 local function isClimbing()
@@ -30,23 +31,38 @@ local function isClimbing()
         local normal = rayResult.Normal
         local angle = math.deg(math.acos(normal:Dot(Vector3.new(0, 1, 0))))
         if angle > 70 and angle < 110 then
-            return true
+            return true, normal
         end
     end
-    return false
+    return false, nil
 end
 
 -- ========== FUNGSI AUTO FAST CLIMB ==========
 local function autoFastClimb()
-    if not fastClimbEnabled or not humanoid then return end
+    if not fastClimbEnabled or not humanoid or not root then return end
     
-    if isClimbing() then
-        -- Saat di tower → speed 500, tanpa jump
+    local climbing, normal = isClimbing()
+    
+    if climbing then
+        -- Saat di tower → kecepatan tinggi + dorongan ke atas
         humanoid.WalkSpeed = climbSpeed
-        -- Tetap gunakan JumpPower tinggi tapi tidak auto jump
-        humanoid.JumpPower = 250
+        humanoid.JumpPower = 50 -- normal, tidak auto jump
+        
+        -- Dorong karakter ke atas menggunakan Velocity
+        local currentVel = root.Velocity
+        local upVelocity = Vector3.new(0, climbUpForce, 0)
+        
+        -- Tambahkan dorongan ke arah dinding agar tetap menempel
+        local wallPush = normal * -20
+        
+        -- Gabungkan kecepatan: ke atas + ke dinding
+        root.Velocity = Vector3.new(currentVel.X * 0.5, climbUpForce, currentVel.Z * 0.5) + wallPush
+        
+        -- Rotasi karakter menghadap dinding agar climb mulus
+        root.CFrame = CFrame.lookAt(root.Position, root.Position + normal * -1)
+        
     else
-        -- Saat di tanah → normal 16
+        -- Saat di tanah → normal
         humanoid.WalkSpeed = normalSpeed
         humanoid.JumpPower = 50
     end
@@ -101,7 +117,7 @@ fastClimbBtn.MouseButton1Click:Connect(function()
     print("[VORTEX] Fast Climb: " .. (fastClimbEnabled and "ON" or "OFF"))
 end)
 
--- ========== LOOP DETEKSI CLIMB (TANPA AUTO JUMP) ==========
+-- ========== LOOP DETEKSI CLIMB ==========
 game:GetService("RunService").Heartbeat:Connect(function()
     autoFastClimb()
 end)
@@ -138,7 +154,7 @@ end)
 
 print("=========================================")
 print("     VORTEX FAST CLIMB TOWER")
-print("     Auto fast climb tanpa auto jump")
+print("     Manjat cepat dengan velocity")
 print("     Speed 500 saat di tower")
 print("     Speed 16 saat di tanah")
 print("     TELEGRAM : @realvortexdigital")
@@ -146,5 +162,5 @@ print("=========================================")
 print("")
 print("CARA PAKAI:")
 print("1. Klik 'Fast Climb [OFF]' untuk mengaktifkan")
-print("2. Saat di tower → speed 500 (tanpa auto jump)")
+print("2. Saat di tower → manjat cepat (tanpa lompat)")
 print("3. Saat di tanah → speed normal 16")
