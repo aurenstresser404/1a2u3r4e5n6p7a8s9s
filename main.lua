@@ -1,6 +1,6 @@
 -- ============================================
--- VORTEX FAST CLIMB TOWER - CLAIM COIN & PIALA
--- Manjat cepat + tetap claim coin & piala
+-- VORTEX FAST CLIMB TOWER - AUTO CLAIM REWARD
+-- Manjat cepat + auto claim piala & coin hasil climb
 -- TELEGRAM : @realvortexdigital
 -- ============================================
 
@@ -36,22 +36,66 @@ local function isClimbing()
     return false, nil
 end
 
--- ========== FUNGSI CLAIM COIN & PIALA ==========
-local function claimItems()
+-- ========== AUTO CLAIM SEMUA REWARD (PIALA + COIN + DLL) ==========
+local function claimAllRewards()
     for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("Part") or obj:IsA("Model") then
+        -- Deteksi objek reward: piala, coin, token, reward, chest, gift, dll
+        if obj:IsA("Part") or obj:IsA("Model") or obj:IsA("Tool") then
             local name = obj.Name:lower()
-            -- Deteksi coin / piala / trophy
-            if name:match("coin") or name:match("piala") or name:match("trophy") or name:match("cup") or name:match("medal") or name:match("reward") then
-                local target = obj:IsA("Part") and obj or obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Part")
+            local isReward = false
+            
+            -- Daftar keyword reward
+            local rewardKeywords = {
+                "piala", "trophy", "cup", "medal", "reward", "prize",
+                "coin", "token", "gem", "diamond", "gold", "silver",
+                "chest", "gift", "present", "box", "crate",
+                "win", "victory", "complete", "finish", "done"
+            }
+            
+            for _, kw in ipairs(rewardKeywords) do
+                if name:match(kw) then
+                    isReward = true
+                    break
+                end
+            end
+            
+            if isReward then
+                local target = obj:IsA("Part") and obj or 
+                                obj:FindFirstChild("HumanoidRootPart") or 
+                                obj:FindFirstChild("Head") or 
+                                obj:FindFirstChild("Part") or 
+                                obj.PrimaryPart or obj
+                
                 if target and root then
-                    -- Teleport ke item
+                    -- Teleport ke reward
                     root.CFrame = target.CFrame + Vector3.new(0, 2, 0)
-                    wait(0.05)
+                    wait(0.02)
+                    
                     -- Klik ClickDetector jika ada
                     local click = obj:FindFirstChild("ClickDetector") or target:FindFirstChild("ClickDetector")
-                    if click then
+                    if click and click:IsA("ClickDetector") then
                         click:Click()
+                        print("[VORTEX] Claimed reward: " .. obj.Name)
+                    end
+                    
+                    -- ProximityPrompt jika ada
+                    local prompt = obj:FindFirstChild("ProximityPrompt") or target:FindFirstChild("ProximityPrompt")
+                    if prompt and prompt:IsA("ProximityPrompt") then
+                        prompt:InputHoldStart()
+                        wait(0.05)
+                        prompt:InputHoldEnd()
+                        print("[VORTEX] Claimed reward via prompt: " .. obj.Name)
+                    end
+                    
+                    -- Klik tombol GUI reward jika ada
+                    for _, btn in ipairs(player.PlayerGui:GetDescendants()) do
+                        if btn:IsA("TextButton") or btn:IsA("ImageButton") then
+                            local txt = btn.Text:lower()
+                            if txt:match("claim") or txt:match("collect") or txt:match("take") or txt:match("reward") then
+                                btn:Click()
+                                wait(0.02)
+                            end
+                        end
                     end
                 end
             end
@@ -59,7 +103,7 @@ local function claimItems()
     end
 end
 
--- ========== FUNGSI AUTO FAST CLIMB ==========
+-- ========== FUNGSI AUTO FAST CLIMB + CLAIM ==========
 local function autoFastClimb()
     if not fastClimbEnabled or not humanoid or not root then return end
     
@@ -70,16 +114,13 @@ local function autoFastClimb()
         humanoid.WalkSpeed = climbSpeed
         humanoid.JumpPower = 50
         
-        -- Dorong karakter ke atas menggunakan Velocity
+        -- Velocity dorong ke atas
         local currentVel = root.Velocity
-        local upVelocity = Vector3.new(0, climbUpForce, 0)
-        local wallPush = normal * -20
-        
-        root.Velocity = Vector3.new(currentVel.X * 0.5, climbUpForce, currentVel.Z * 0.5) + wallPush
+        root.Velocity = Vector3.new(currentVel.X * 0.5, climbUpForce, currentVel.Z * 0.5) + (normal * -20)
         root.CFrame = CFrame.lookAt(root.Position, root.Position + normal * -1)
         
-        -- ===== CLAIM COIN & PIALA SAAT CLIMB =====
-        claimItems()
+        -- ===== CLAIM SEMUA REWARD SAAT CLIMB =====
+        claimAllRewards()
         
     else
         -- Saat di tanah → normal
@@ -95,8 +136,8 @@ gui.Parent = player:WaitForChild("PlayerGui")
 if not gui.Parent then gui.Parent = game:GetService("CoreGui") end
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 250, 0, 120)
-frame.Position = UDim2.new(0.5, -125, 0.5, -60)
+frame.Size = UDim2.new(0, 250, 0, 130)
+frame.Position = UDim2.new(0.5, -125, 0.5, -65)
 frame.BackgroundColor3 = Color3.fromRGB(10, 10, 25)
 frame.BackgroundTransparency = 0.05
 frame.BorderSizePixel = 2
@@ -122,7 +163,7 @@ fastClimbBtn.Size = UDim2.new(0.8, 0, 0, 40)
 fastClimbBtn.Position = UDim2.new(0.1, 0, 0.4, 0)
 fastClimbBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 70)
 fastClimbBtn.BackgroundTransparency = 0.2
-fastClimbBtn.Text = "Fast Climb [OFF]"
+fastClimbBtn.Text = "Fast Climb + Auto Claim [OFF]"
 fastClimbBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 fastClimbBtn.TextScaled = true
 fastClimbBtn.Font = Enum.Font.GothamBold
@@ -132,14 +173,9 @@ fastClimbBtn.Parent = frame
 
 fastClimbBtn.MouseButton1Click:Connect(function()
     fastClimbEnabled = not fastClimbEnabled
-    fastClimbBtn.Text = fastClimbEnabled and "Fast Climb [ON]" or "Fast Climb [OFF]"
+    fastClimbBtn.Text = fastClimbEnabled and "Fast Climb + Auto Claim [ON]" or "Fast Climb + Auto Claim [OFF]"
     fastClimbBtn.BackgroundColor3 = fastClimbEnabled and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(40, 40, 70)
-    print("[VORTEX] Fast Climb: " .. (fastClimbEnabled and "ON" or "OFF"))
-end)
-
--- ========== LOOP DETEKSI CLIMB ==========
-game:GetService("RunService").Heartbeat:Connect(function()
-    autoFastClimb()
+    print("[VORTEX] Fast Climb + Auto Claim: " .. (fastClimbEnabled and "ON" or "OFF"))
 end)
 
 -- ========== CREDIT ==========
@@ -172,10 +208,19 @@ game:GetService("UserInputService").InputChanged:Connect(function(i)
     end
 end)
 
+-- ========== LOOP UTAMA ==========
+game:GetService("RunService").Heartbeat:Connect(function()
+    autoFastClimb()
+end)
+
 print("=========================================")
 print("     VORTEX FAST CLIMB TOWER")
-print("     Manjat cepat + claim coin & piala")
-print("     Speed 500 saat di tower")
-print("     Speed 16 saat di tanah")
+print("     Fast Climb 500 + Auto Claim Reward")
+print("     Piala kemenangan + coin otomatis ke claim")
 print("     TELEGRAM : @realvortexdigital")
 print("=========================================")
+print("")
+print("CARA PAKAI:")
+print("1. Klik tombol untuk mengaktifkan")
+print("2. Saat di tower → climb cepat + auto claim semua reward")
+print("3. Saat di tanah → speed normal 16")
