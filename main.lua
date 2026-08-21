@@ -1,221 +1,221 @@
--- VORTEX SAFE BYPASS ENGINE v6.0
--- Anti-rebirth, increment bertahap 1B per push dengan simulasi natural
+-- VORTEX INSTANT 500B POWER UNLOCKER v8.0
+-- LANGSUNG SET POWER KE 500B TANPA PROSES
 
 local player = game.Players.LocalPlayer
-local replicatedStorage = game:GetService("ReplicatedStorage")
-local runService = game:GetService("RunService")
-local virtualInput = game:GetService("VirtualInputManager")
 
--- GUI
+-- CARI SEMUA NILAI POWER
+local function findPowerValues()
+    local found = {}
+    
+    -- Cari di seluruh game
+    for _, obj in pairs(game:GetDescendants()) do
+        if obj:IsA("NumberValue") then
+            local name = obj.Name:lower()
+            -- Cari semua yang berhubungan dengan power
+            if name:find("power") or name:find("point") or name:find("score") or name:find("energy") or name:find("stat") then
+                table.insert(found, obj)
+            end
+        end
+        -- Cari juga IntValue
+        if obj:IsA("IntValue") then
+            local name = obj.Name:lower()
+            if name:find("power") or name:find("point") or name:find("score") then
+                table.insert(found, obj)
+            end
+        end
+    end
+    
+    return found
+end
+
+-- GUI UNLOCK
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "VortexSafeBypass"
+screenGui.Name = "VortexUnlocker"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = player.PlayerGui
 
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 320, 0, 200)
-mainFrame.Position = UDim2.new(0.5, -160, 0.5, -100)
-mainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 30)
-mainFrame.BackgroundTransparency = 0.15
-mainFrame.BorderSizePixel = 2
-mainFrame.BorderColor3 = Color3.fromRGB(0, 200, 255)
+mainFrame.Size = UDim2.new(0, 400, 0, 300)
+mainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+mainFrame.BackgroundTransparency = 0.2
+mainFrame.BorderSizePixel = 3
+mainFrame.BorderColor3 = Color3.fromRGB(255, 215, 0)
 mainFrame.Active = true
 mainFrame.Draggable = true
 mainFrame.Parent = screenGui
 
 -- Close
 local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, 28, 0, 28)
-closeBtn.Position = UDim2.new(1, -33, 0, 5)
-closeBtn.BackgroundColor3 = Color3.fromRGB(200, 30, 30)
+closeBtn.Size = UDim2.new(0, 30, 0, 30)
+closeBtn.Position = UDim2.new(1, -35, 0, 5)
+closeBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
 closeBtn.Text = "✕"
 closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeBtn.TextSize = 16
+closeBtn.TextSize = 18
 closeBtn.Font = Enum.Font.SourceSansBold
 closeBtn.Parent = mainFrame
 closeBtn.MouseButton1Click:Connect(function() screenGui.Enabled = false end)
 
 -- Title
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 35)
-title.Position = UDim2.new(0, 0, 0, 8)
+title.Size = UDim2.new(1, 0, 0, 50)
+title.Position = UDim2.new(0, 0, 0, 10)
 title.BackgroundTransparency = 1
-title.Text = "🌀 VORTEX SAFE PUSH"
-title.TextColor3 = Color3.fromRGB(0, 200, 255)
-title.TextSize = 20
+title.Text = "⚡ VORTEX POWER UNLOCKER"
+title.TextColor3 = Color3.fromRGB(255, 215, 0)
+title.TextSize = 26
 title.Font = Enum.Font.SourceSansBold
 title.Parent = mainFrame
 
+-- Subtitle
+local subTitle = Instance.new("TextLabel")
+subTitle.Size = UDim2.new(1, 0, 0, 30)
+subTitle.Position = UDim2.new(0, 0, 0, 60)
+subTitle.BackgroundTransparency = 1
+subTitle.Text = "SET 500B POWER INSTAN"
+subTitle.TextColor3 = Color3.fromRGB(255, 100, 100)
+subTitle.TextSize = 18
+subTitle.Font = Enum.Font.SourceSans
+subTitle.Parent = mainFrame
+
 -- Status
 local statusLabel = Instance.new("TextLabel")
-statusLabel.Size = UDim2.new(1, 0, 0, 28)
-statusLabel.Position = UDim2.new(0, 0, 0, 48)
+statusLabel.Size = UDim2.new(1, 0, 0, 30)
+statusLabel.Position = UDim2.new(0, 0, 0, 95)
 statusLabel.BackgroundTransparency = 1
-statusLabel.Text = "⚡ Status: READY"
-statusLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
-statusLabel.TextSize = 15
+statusLabel.Text = "🔍 SCANNING POWER VALUES..."
+statusLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
+statusLabel.TextSize = 16
 statusLabel.Font = Enum.Font.SourceSans
 statusLabel.Parent = mainFrame
 
--- Power display
-local powerLabel = Instance.new("TextLabel")
-powerLabel.Size = UDim2.new(1, 0, 0, 30)
-powerLabel.Position = UDim2.new(0, 0, 0, 78)
-powerLabel.BackgroundTransparency = 1
-powerLabel.Text = "💎 Power: 0 B"
-powerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-powerLabel.TextSize = 16
-powerLabel.Font = Enum.Font.SourceSans
-powerLabel.Parent = mainFrame
+-- Found count
+local countLabel = Instance.new("TextLabel")
+countLabel.Size = UDim2.new(1, 0, 0, 25)
+countLabel.Position = UDim2.new(0, 0, 0, 125)
+countLabel.BackgroundTransparency = 1
+countLabel.Text = "Found: 0 values"
+countLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+countLabel.TextSize = 14
+countLabel.Font = Enum.Font.SourceSans
+countLabel.Parent = mainFrame
 
--- Push button
-local pushBtn = Instance.new("TextButton")
-pushBtn.Size = UDim2.new(0.75, 0, 0, 45)
-pushBtn.Position = UDim2.new(0.125, 0, 0, 120)
-pushBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-pushBtn.Text = "💥 PUSH +1B"
-pushBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-pushBtn.TextSize = 20
-pushBtn.Font = Enum.Font.SourceSansBold
-pushBtn.Parent = mainFrame
+-- Tombol UNLOCK 500B
+local unlockBtn = Instance.new("TextButton")
+unlockBtn.Size = UDim2.new(0.8, 0, 0, 60)
+unlockBtn.Position = UDim2.new(0.1, 0, 0, 165)
+unlockBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+unlockBtn.Text = "🚀 UNLOCK 500B POWER"
+unlockBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+unlockBtn.TextSize = 24
+unlockBtn.Font = Enum.Font.SourceSansBold
+unlockBtn.Parent = mainFrame
 
--- Auto button
-local autoBtn = Instance.new("TextButton")
-autoBtn.Size = UDim2.new(0.75, 0, 0, 35)
-autoBtn.Position = UDim2.new(0.125, 0, 0, 170)
-autoBtn.BackgroundColor3 = Color3.fromRGB(200, 100, 0)
-autoBtn.Text = "⚡ AUTO PUSH (SAFE)"
-autoBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-autoBtn.TextSize = 16
-autoBtn.Font = Enum.Font.SourceSansBold
-autoBtn.Parent = mainFrame
+-- Tombol RESET ke 0
+local resetBtn = Instance.new("TextButton")
+resetBtn.Size = UDim2.new(0.35, 0, 0, 35)
+resetBtn.Position = UDim2.new(0.1, 0, 0, 235)
+resetBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+resetBtn.Text = "↺ RESET"
+resetBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+resetBtn.TextSize = 16
+resetBtn.Font = Enum.Font.SourceSansBold
+resetBtn.Parent = mainFrame
 
--- Toggle button
+-- Tombol TOGGLE
 local toggleBtn = Instance.new("TextButton")
-toggleBtn.Size = UDim2.new(0, 100, 0, 35)
-toggleBtn.Position = UDim2.new(0.02, 0, 0.92, 0)
+toggleBtn.Size = UDim2.new(0, 120, 0, 40)
+toggleBtn.Position = UDim2.new(0.02, 0, 0.9, 0)
 toggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
-toggleBtn.Text = "🌀 VORTEX"
-toggleBtn.TextColor3 = Color3.fromRGB(0, 200, 255)
-toggleBtn.TextSize = 16
+toggleBtn.Text = "⚡ VORTEX"
+toggleBtn.TextColor3 = Color3.fromRGB(255, 215, 0)
+toggleBtn.TextSize = 18
 toggleBtn.Font = Enum.Font.SourceSansBold
 toggleBtn.Parent = screenGui
-toggleBtn.MouseButton1Click:Connect(function() screenGui.Enabled = not screenGui.Enabled end)
+toggleBtn.MouseButton1Click:Connect(function()
+    screenGui.Enabled = not screenGui.Enabled
+end)
 
--- Cari nilai power yang benar
-local function findRealPowerValue()
-    -- Cari di leaderstats
-    local ls = player:FindFirstChild("leaderstats")
-    if ls then
-        for _, v in pairs(ls:GetChildren()) do
-            if v:IsA("NumberValue") and (v.Name:lower():find("power") or v.Name:lower():find("point") or v.Name:lower():find("score")) then
-                return v
-            end
-        end
-    end
-    
-    -- Cari di player
-    for _, v in pairs(player:GetChildren()) do
-        if v:IsA("NumberValue") and (v.Name:lower():find("power") or v.Name:lower():find("point")) then
-            return v
-        end
-    end
-    
-    -- Cari di workspace
-    for _, v in pairs(game:GetDescendants()) do
-        if v:IsA("NumberValue") and v.Parent and v.Parent:IsA("Model") and v.Parent.Name:lower():find("player") then
-            if v.Name:lower():find("power") or v.Name:lower():find("point") then
-                return v
-            end
-        end
-    end
-    
-    return nil
-end
+-- FIND ALL POWER VALUES
+local allPowerValues = {}
 
-local powerValue = findRealPowerValue()
-if powerValue then
-    powerLabel.Text = "💎 Power: " .. string.format("%.0f B", powerValue.Value/1e9)
-end
-
--- Fungsi push aman (tidak memicu rebirth)
-local function safePush()
-    if not powerValue then
-        statusLabel.Text = "⚠️ Power value not found!"
+local function scanAllPower()
+    allPowerValues = findPowerValues()
+    countLabel.Text = "Found: " .. #allPowerValues .. " power values"
+    if #allPowerValues > 0 then
+        statusLabel.Text = "✅ " .. #allPowerValues .. " VALUES FOUND! READY TO UNLOCK"
+        statusLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
+        return true
+    else
+        statusLabel.Text = "⚠️ NO POWER VALUES FOUND! RETRYING..."
         statusLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
+        return false
+    end
+end
+
+-- UNLOCK 500B
+local function unlock500B()
+    -- Scan ulang
+    allPowerValues = findPowerValues()
+    
+    if #allPowerValues == 0 then
+        statusLabel.Text = "❌ NO VALUES FOUND! CAN'T UNLOCK"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
         return
     end
     
-    -- Increment bertahap (1B)
-    powerValue.Value = powerValue.Value + 1e9
+    local count = 0
+    for _, val in pairs(allPowerValues) do
+        pcall(function()
+            local oldVal = val.Value
+            val.Value = 500e9 -- 500B
+            count = count + 1
+            print("✅ SET:", val.Name, oldVal, "→", val.Value)
+        end)
+    end
     
-    -- Update display
-    powerLabel.Text = "💎 Power: " .. string.format("%.0f B", powerValue.Value/1e9)
-    statusLabel.Text = "✅ +1B PUSHED!"
+    statusLabel.Text = "🎯 500B UNLOCKED! (" .. count .. " values modified)"
     statusLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
+    unlockBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+    unlockBtn.Text = "✅ UNLOCKED!"
     
-    -- Simulasi click alami (opsional)
-    pcall(function()
-        -- Cari tombol push di game dan klik virtual
-        local screenGui2 = player.PlayerGui
-        for _, gui in pairs(screenGui2:GetChildren()) do
-            if gui:IsA("ScreenGui") then
-                for _, btn in pairs(gui:GetDescendants()) do
-                    if btn:IsA("TextButton") and (btn.Name:lower():find("push") or btn.Name:lower():find("click") or btn.Name:lower():find("interact")) then
-                        virtualInput:SendMouseButtonEvent(btn.AbsolutePosition.X + btn.AbsoluteSize.X/2, btn.AbsolutePosition.Y + btn.AbsoluteSize.Y/2, 0, true, game, 0)
-                        task.wait(0.01)
-                        virtualInput:SendMouseButtonEvent(btn.AbsolutePosition.X + btn.AbsoluteSize.X/2, btn.AbsolutePosition.Y + btn.AbsoluteSize.Y/2, 0, false, game, 0)
-                        break
-                    end
-                end
-            end
+    -- Cek apakah power push juga berubah
+    for _, val in pairs(allPowerValues) do
+        if val.Name:lower():find("push") then
+            print("💪 PUSH POWER:", val.Value)
         end
-    end)
+    end
 end
 
--- Auto push (dengan delay natural)
-local autoRunning = false
-local function startAutoPush()
-    if autoRunning then return end
-    autoRunning = true
-    autoBtn.Text = "⏳ RUNNING..."
-    autoBtn.BackgroundColor3 = Color3.fromRGB(255, 150, 0)
-    
-    task.spawn(function()
-        while autoRunning do
-            safePush()
-            task.wait(0.1) -- 10 push/detik = 10B/detik, aman tidak memicu rebirth
-        end
-    end)
-end
-
--- Stop auto
-local function stopAutoPush()
-    autoRunning = false
-    autoBtn.Text = "⚡ AUTO PUSH (SAFE)"
-    autoBtn.BackgroundColor3 = Color3.fromRGB(200, 100, 0)
+-- RESET ke 0
+local function resetPower()
+    allPowerValues = findPowerValues()
+    for _, val in pairs(allPowerValues) do
+        pcall(function()
+            val.Value = 0
+        end)
+    end
+    statusLabel.Text = "↺ RESET TO 0"
+    statusLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
+    unlockBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    unlockBtn.Text = "🚀 UNLOCK 500B POWER"
 end
 
 -- Button events
-pushBtn.MouseButton1Click:Connect(safePush)
-autoBtn.MouseButton1Click:Connect(function()
-    if autoRunning then
-        stopAutoPush()
-    else
-        startAutoPush()
-    end
-end)
+unlockBtn.MouseButton1Click:Connect(unlock500B)
+resetBtn.MouseButton1Click:Connect(resetPower)
 
--- Update tiap detik
+-- SCAN AWAL
 task.spawn(function()
+    scanAllPower()
+    -- Scan ulang tiap 5 detik
     while true do
-        if powerValue then
-            powerLabel.Text = "💎 Power: " .. string.format("%.0f B", powerValue.Value/1e9)
-        end
-        task.wait(1)
+        task.wait(5)
+        scanAllPower()
     end
 end)
 
-print("🌀 VORTEX SAFE BYPASS ACTIVATED!")
-print("✅ Anti-rebirth protection aktif")
-print("💥 1B per push - aman dan stabil")
+print("⚡ VORTEX POWER UNLOCKER ACTIVATED!")
+print("🔍 SCANNING ALL POWER VALUES...")
+print("💀 KLIK UNLOCK UNTUK SET 500B INSTAN!")
